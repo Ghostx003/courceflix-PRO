@@ -2,7 +2,7 @@
 <html lang="en" data-theme="dark" data-accent="green"> <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Study Calendar</title>
+    <title>Performance App</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
     <script>const originalWarn=console.warn;console.warn=(...args)=>{if(args[0]&&typeof args[0]==='string'&&args[0].includes('cdn.tailwindcss.com should not be used in production'))return;originalWarn(...args);};</script><script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -427,10 +427,8 @@
     <nav id="top-navbar" class="fixed top-0 left-0 right-0 w-full z-40 bg-main/80 backdrop-blur-md transition-all duration-300 transform translate-y-0 shadow-lg flex justify-center items-center h-16">
         <div class="flex gap-2 sm:gap-4 items-center px-4 overflow-x-auto whitespace-nowrap" style="scrollbar-width: none;">
             <a href="index.html" class="px-4 py-2 rounded-lg shadow-sm hover:shadow-md text-subtle font-medium hover:text-main hover:bg-tertiary transition-all flex items-center gap-2"><i class="fas fa-home"></i> CourseFlix</a>
-            <button id="nav-btn-calendar" class="px-4 py-2 rounded-lg shadow-sm hover:shadow-md text-subtle font-medium hover:text-main hover:bg-tertiary transition-all">Tasks</button>
-            <button id="nav-btn-dashboard" class="px-4 py-2 rounded-lg shadow-sm hover:shadow-md text-subtle font-medium hover:text-main hover:bg-tertiary transition-all">Dashboard</button>
+            <button id="nav-btn-dashboard" class="px-4 py-2 rounded-lg shadow-sm hover:shadow-md text-subtle font-medium hover:text-main hover:bg-tertiary transition-all">Performance</button>
             <button id="nav-btn-doubt" class="px-4 py-2 rounded-lg shadow-sm hover:shadow-md text-subtle font-medium hover:text-main hover:bg-tertiary transition-all">Doubts</button>
-            <a href="clock.html" class="px-4 py-2 rounded-lg shadow-sm hover:shadow-md text-subtle font-medium hover:text-main hover:bg-tertiary transition-all flex items-center gap-2">Focus Clock <i class="fas fa-external-link-alt text-xs"></i></a>
             <a href="plan.html" class="px-4 py-2 rounded-lg shadow-sm hover:shadow-md text-blue-400 font-medium hover:text-blue-300 hover:bg-tertiary transition-all flex items-center gap-2">Planner App <i class="fas fa-external-link-alt text-xs"></i></a>
         </div>
     </nav>
@@ -440,26 +438,9 @@
         <h2 class="text-xl font-bold mb-6 text-main">Menu</h2>
         <ul>
             <li>
-                <button id="calendar-menu-btn" class="w-full text-left py-2 px-3 rounded-md hover:bg-tertiary font-semibold transition-colors text-main">
-                    Study Calendar
-                </button>
-            </li>
-            <li>
-                 <button id="dashboard-menu-btn" class="w-full text-left py-2 px-3 rounded-md hover:bg-tertiary font-semibold transition-colors text-main">
-                    Dashboard
-                </button>
-            </li>
-            <li>
                  <button id="doubt-dashboard-menu-btn" class="w-full text-left py-2 px-3 rounded-md hover:bg-tertiary font-semibold transition-colors text-main">
                     Doubt Manager
                 </button>
-            </li>
-
-            
-            <li>
-                <a href="clock.html" target="_blank" class="w-full text-left py-2 px-3 rounded-md hover:bg-tertiary font-semibold transition-colors text-main block">
-                    Open Focus Clock
-                </a>
             </li>
 
 
@@ -491,77 +472,7 @@
         </ul>
     </div>
     
-    <div id="calendar-view" class="pt-16">
-        <div class="flex items-start md:items-center justify-center min-h-screen p-4">
-            <div class="w-full max-w-4xl bg-main rounded-2xl shadow-lg p-6 md:p-8">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="flex items-center space-x-2 w-28 justify-start">
-                         <button class="hamburger-menu-btn p-2 rounded-full hover:bg-tertiary transition-colors">
-                             <svg class="w-6 h-6 text-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                         </button>
-                         <a href="index.html" class="p-2 rounded-full hover:bg-tertiary transition-colors text-subtle flex items-center justify-center" title="Back to CourseFlix">
-                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                         </a>
-                    </div>
-                    <div class="flex items-center">
-                        <button id="today-btn" class="px-4 py-2 btn-secondary rounded-lg transition-colors text-sm font-semibold shadow-sm mr-3">Today</button>
-                        <button id="prev-month" class="p-2 rounded-full hover:bg-tertiary transition-colors">
-                            <svg class="w-6 h-6 text-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                        </button>
-                        <h2 id="month-year" class="text-xl md:text-2xl font-bold text-main mx-4 w-40 sm:w-48 text-center"></h2>
-                        <button id="next-month" class="p-2 rounded-full hover:bg-tertiary transition-colors">
-                            <svg class="w-6 h-6 text-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                        </button>
-                    </div>
-                    <div class="w-28 flex justify-end items-center space-x-2">
-                        <button id="header-doubt-btn" class="p-2 rounded-full hover:bg-tertiary transition-colors" title="Doubt Manager">
-                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.546-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        </button>
-                        <button id="d-day-btn" class="px-4 py-2 btn-dday rounded-lg transition-colors text-sm font-semibold shadow-sm w-24 text-center">
-                            Set Target
-                        </button>
-                    </div>
-                </div>
-
-                <div id="session-timer-container" class="text-center mb-6 p-4 rounded-lg list-item-bg border border-main">
-                    <div class="flex items-center justify-center gap-4">
-                        <h3 id="session-countdown-title" class="text-lg font-semibold text-subtle">Session Countdown</h3>
-                        <button id="set-end-time-btn" class="px-3 py-1 btn-secondary rounded-lg transition-colors text-sm font-semibold shadow-sm">Set End Time</button>
-                    </div>
-                    <div id="session-countdown" class="text-4xl font-bold my-2" style="color: var(--accent-primary); font-variant-numeric: tabular-nums;">--:--:--</div>
-                    <p id="session-motivation" class="text-md text-subtle font-medium">Set an end time to begin.</p>
-                </div>
-                
-                <div id="calendar-container">
-                    <div class="grid grid-cols-7 gap-1 text-center font-semibold text-subtle mb-2">
-                        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
-                    </div>
-                    <div id="calendar-grid" class="grid calendar-grid gap-1 md:gap-2"></div>
-                </div>
-
-                <div class="my-6 border-t border-main"></div>
-
-                <div id="subjects-container">
-                    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-                        <h3 id="selected-date-heading" class="text-lg md:text-xl font-bold text-main mb-2 md:mb-0">Select a date</h3>
-                        <div class="flex items-center space-x-2">
-                            <div id="progress-summary" class="flex items-center space-x-2 text-md font-semibold" style="color: var(--accent-primary);"></div>
-                            <!-- Buttons removed per user request -->
-                        </div>
-                    </div>
-                    <div id="subjects-list" class="space-y-3">
-                        <p class="text-subtle">Your subjects for the selected day will appear here.</p>
-                    </div>
-                    <div id="completed-subjects-container" class="mt-8 hidden">
-                        <h4 class="text-lg font-bold text-main mb-3 border-b border-main pb-2">Subjects Done</h4>
-                        <div id="subjects-done-list" class="space-y-3"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="dashboard-view" class="p-4 md:p-8 pt-20 md:pt-24 hidden w-full">
+    <div id="dashboard-view" class="p-4 md:p-8 pt-20 md:pt-24 w-full">
         <div class="flex justify-between items-center mb-6">
             <div class="flex items-center space-x-2">
                 <button class="hamburger-menu-btn p-2 rounded-full hover:bg-tertiary transition-colors">
@@ -777,9 +688,15 @@
                  <div class="dashboard-card">
                          <div class="flex justify-between items-center mb-4">
                              <h2 class="text-lg font-bold text-main">Assignments</h2>
-                             <button id="add-assignment-btn" class="w-8 h-8 rounded-lg btn-primary flex items-center justify-center">
-                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                             </button>
+                             <div class="flex gap-2">
+                                 <input type="file" id="mass-upload-assignment-input" multiple class="hidden" accept="*/*">
+                                 <button id="mass-upload-assignment-btn" class="w-8 h-8 rounded-lg bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-colors shadow-sm" title="Mass Upload">
+                                     <i class="fas fa-file-upload"></i>
+                                 </button>
+                                 <button id="add-assignment-btn" class="w-8 h-8 rounded-lg btn-primary flex items-center justify-center shadow-sm">
+                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                                 </button>
+                             </div>
                          </div>
                          <div id="assignment-list" class="space-y-3 max-h-[500px] overflow-y-auto flex-grow pr-2"></div>
                  </div>
@@ -939,17 +856,6 @@
         </div>
     </div>
 
-    <div id="session-end-time-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50 p-4">
-        <div class="bg-main rounded-2xl shadow-xl p-6 w-full max-w-xs">
-            <h4 class="text-xl font-bold mb-4 text-main">Session End Time</h4>
-            <p class="text-sm text-subtle mb-4">What time does your study session end for the day?</p>
-            <input type="time" id="session-end-time-input" class="w-full p-2 border rounded-lg mb-4 text-center text-lg input-main" style="color-scheme: dark;">
-            <div class="flex justify-end space-x-3">
-                <button id="cancel-end-time" class="px-5 py-2 btn-secondary rounded-lg transition-colors font-semibold">Cancel</button>
-                <button id="confirm-end-time" class="px-5 py-2 btn-primary rounded-lg transition-colors font-semibold">Save</button>
-            </div>
-        </div>
-    </div>
 
     <div id="name-modal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center hidden z-50 p-4">
         <div class="bg-main rounded-2xl shadow-xl p-6 w-full max-w-sm text-center">
@@ -972,7 +878,6 @@
         let activeSubjectPool = [];
 
         // --- CACHED SELECTORS ---
-        const calendarView = document.getElementById('calendar-view');
         const dashboardView = document.getElementById('dashboard-view');
         const doubtDashboardView = document.getElementById('doubt-dashboard-view');
         
@@ -1021,20 +926,14 @@
         const editHoursSubjectName = document.getElementById('edit-hours-subject-name');
         
         // --- NEW TIMER SELECTORS ---
-        const setEndTimeBtn = document.getElementById('set-end-time-btn');
-        const sessionEndTimeModal = document.getElementById('session-end-time-modal');
-        const cancelEndTimeBtn = document.getElementById('cancel-end-time');
-        const confirmEndTimeBtn = document.getElementById('confirm-end-time');
-        const sessionEndTimeInput = document.getElementById('session-end-time-input');
+
         const sessionCountdownEl = document.getElementById('session-countdown');
         const sessionMotivationEl = document.getElementById('session-motivation');
         const sessionCountdownTitle = document.getElementById('session-countdown-title');
         
         // --- NAVIGATION SELECTORS ---
-        const calendarMenuBtn = document.getElementById('calendar-menu-btn');
-        const dashboardMenuBtn = document.getElementById('dashboard-menu-btn');
         const doubtDashboardMenuBtn = document.getElementById('doubt-dashboard-menu-btn');
-        const headerDoubtBtn = document.getElementById('header-doubt-btn');
+
         const backupMenuBtn = document.getElementById('backup-menu-btn');
         const importMenuBtn = document.getElementById('import-menu-btn');
         const resetDataBtn = document.getElementById('reset-data-btn');
@@ -1236,7 +1135,6 @@
         const saveSubjectRatings = () => localStorage.setItem('subjectRatings', JSON.stringify(subjectRatings));
         const saveCourseData = () => localStorage.setItem('courseData', JSON.stringify(courseData));
         const saveAssignments = () => localStorage.setItem('assignments', JSON.stringify(assignments));
-        const saveSessionEndTime = () => { if(studySessionEndTime) localStorage.setItem('studySessionEndTime', studySessionEndTime); else localStorage.removeItem('studySessionEndTime'); };
         const savePinnedSubjects = () => localStorage.setItem('pinnedSubjects', JSON.stringify(pinnedSubjects));
         const saveFacultyData = () => localStorage.setItem('facultyData', JSON.stringify(facultyData));
         
@@ -1303,18 +1201,12 @@
 
         // --- VIEW TOGGLING & ROUTING ---
         const handleRouting = () => {
-            const hash = window.location.hash || '#task';
-            if (hash === '#task') {
-                dashboardView.classList.add('hidden');
-                doubtDashboardView.classList.add('hidden');
-                calendarView.classList.remove('hidden');
-            } else if (hash === '#dashboard') {
-                calendarView.classList.add('hidden');
+            const hash = window.location.hash || '#dashboard';
+            if (hash === '#dashboard') {
                 doubtDashboardView.classList.add('hidden');
                 dashboardView.classList.remove('hidden');
                 renderDashboard();
             } else if (hash === '#doubt-dashboard' || hash === '#doubts') {
-                calendarView.classList.add('hidden');
                 dashboardView.classList.add('hidden');
                 doubtDashboardView.classList.remove('hidden');
                 initDoubtDashboard();
@@ -1323,7 +1215,6 @@
 
         window.addEventListener('hashchange', handleRouting);
         
-        document.getElementById('nav-btn-calendar')?.addEventListener('click', () => window.location.hash = '#task');
         document.getElementById('nav-btn-dashboard')?.addEventListener('click', () => window.location.hash = '#dashboard');
         document.getElementById('nav-btn-doubt')?.addEventListener('click', () => window.location.hash = '#doubt-dashboard');
         
@@ -1353,51 +1244,26 @@
 
         
         // --- NAVIGATION LISTENERS ---
-        calendarMenuBtn.addEventListener('click', () => { closeSidebar(); showCalendarView(); });
-        dashboardMenuBtn.addEventListener('click', () => { closeSidebar(); showDashboardView(); });
         doubtDashboardMenuBtn.addEventListener('click', () => { closeSidebar(); showDoubtDashboardView(); });
-        headerDoubtBtn.addEventListener('click', () => { showDoubtDashboardView(); });
 
-        // --- COUNTDOWN TIMER LOGIC ---
+
+        // --- MOTIVATION MESSAGE ---
         const updateMotivationMessage = (remainingHours) => {
-            if (!studySessionEndTime) {
-                sessionMotivationEl.textContent = 'Set an end time to track your progress.';
-                return;
-            }
-
-            const now = new Date();
-            const end = new Date();
-            const [endHours, endMinutes] = studySessionEndTime.split(':');
-            end.setHours(parseInt(endHours, 10), parseInt(endMinutes, 10), 0, 0);
-
-            const diffMs = end.getTime() - now.getTime();
-            if (diffMs < 0) {
-                sessionMotivationEl.textContent = "Great work! The session has ended.";
-                return;
-            }
-
-            const sessionHoursLeft = diffMs / (1000 * 60 * 60);
-
             if (remainingHours > 0) {
                 const remainingMinutes = remainingHours * 60;
                 let message = `You have <strong>${formatMinutesToHoursAndMinutes(remainingMinutes)}</strong> of tasks left.`;
-                message += ` Session ends in <strong>${formatMinutesToHoursAndMinutes(sessionHoursLeft * 60)}</strong>.`;
-                if (remainingHours > sessionHoursLeft) {
-                    message += ` <span style="color: var(--accent-danger);">Time to focus!</span>`;
-                } else {
-                     message += ` You're on track!`;
-                }
+                message += ` Check your Study Planner to track your progress.`;
                 sessionMotivationEl.innerHTML = message;
             } else {
                 sessionMotivationEl.textContent = "All tasks completed for today! 🎉";
             }
         };
 
-        const startOrUpdateCountdown = () => {
+        const startOrUpdateCountdown = () => { return;
             if (countdownInterval) clearInterval(countdownInterval);
             if (!studySessionEndTime) {
                 sessionCountdownEl.textContent = '--:--:--';
-                sessionMotivationEl.textContent = 'Set an end time to begin.';
+                sessionMotivationEl.textContent = 'Set an end time in the Study Planner.';
                 sessionCountdownTitle.textContent = 'Session Countdown';
                 return;
             }
@@ -1427,14 +1293,14 @@
                 sessionCountdownEl.textContent = `${hours}:${minutes}:${seconds}`;
 
                 // Update motivation message as well
-                const dateKey = formatDateKey(selectedDate); // use selectedDate to match context
+                const dateKey = formatDateKey(selectedDate);
                 const totalMinutes = calculateTotalMinutesForDay(dateKey);
                 const completedMinutes = calculateCompletedMinutesForDay(dateKey);
                 const remainingHours = (totalMinutes - completedMinutes) / 60;
                 updateMotivationMessage(remainingHours);
             };
 
-            updateTimer(); // Initial call to display immediately
+            updateTimer();
             countdownInterval = setInterval(updateTimer, 1000);
         };
 
@@ -1553,7 +1419,7 @@
             return svg;
         };
 
-        const renderCalendar = () => {
+        const renderCalendar = () => { return;
             calendarGrid.innerHTML = '';
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
@@ -1600,7 +1466,7 @@
             renderSubjects();
         };
 
-        const renderSubjects = () => {
+        const renderSubjects = () => { return;
             const dateKey = formatDateKey(selectedDate);
             selectedDateHeading.textContent = selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             if (!studyData[dateKey] || !Array.isArray(studyData[dateKey])) studyData[dateKey] = [];
@@ -1847,9 +1713,9 @@
         }
         
         // --- MODALS AND BUTTONS ---
-        prevMonthBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); });
-        nextMonthBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); });
-        todayBtn.addEventListener('click', () => { currentDate = new Date(); selectedDate = new Date(); renderCalendar(); renderSubjects(); });
+        
+        
+        
         const openSidebar = () => { sidebarOverlay.classList.remove('hidden'); setTimeout(() => { sidebar.classList.add('open'); sidebarOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'; }, 10); };
         const closeSidebar = () => { sidebar.classList.remove('open'); sidebarOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0)'; setTimeout(() => sidebarOverlay.classList.add('hidden'), 300); };
         
@@ -1958,9 +1824,9 @@
         };
         const closeEditSubjectsModal = () => editSubjectsModal.classList.add('hidden');
         editSubjectsBtn?.addEventListener('click', openEditSubjectsModal);
-        cancelEditSubjectsBtn.addEventListener('click', closeEditSubjectsModal);
-        editSubjectsModal.addEventListener('click', (e) => { if (e.target === editSubjectsModal) closeEditSubjectsModal(); });
-        confirmEditSubjectsBtn.addEventListener('click', () => {
+        cancelEditSubjectsBtn?.addEventListener('click', closeEditSubjectsModal);
+        editSubjectsModal?.addEventListener('click', (e) => { if (e.target === editSubjectsModal) closeEditSubjectsModal(); });
+        confirmEditSubjectsBtn?.addEventListener('click', () => {
             const dateKey = formatDateKey(selectedDate);
             const currentDayData = studyData[dateKey] || [];
             const newDayData = [];
@@ -1982,8 +1848,8 @@
             editHoursModal.classList.remove('hidden'); hoursInput.focus();
         };
         const closeEditHoursModal = () => { editHoursModal.classList.add('hidden'); subjectToEdit = null; };
-        cancelEditHoursBtn.addEventListener('click', closeEditHoursModal);
-        editHoursModal.addEventListener('click', (e) => { if(e.target === editHoursModal) closeEditHoursModal(); });
+        cancelEditHoursBtn?.addEventListener('click', closeEditHoursModal);
+        editHoursModal?.addEventListener('click', (e) => { if(e.target === editHoursModal) closeEditHoursModal(); });
         const handleConfirmHours = () => {
              const newHours = parseInt(hoursInput.value, 10);
             if (subjectToEdit && !isNaN(newHours) && newHours > 0) {
@@ -1994,12 +1860,13 @@
             }
             closeEditHoursModal();
         };
-        confirmEditHoursBtn.addEventListener('click', handleConfirmHours);
+        confirmEditHoursBtn?.addEventListener('click', handleConfirmHours);
         hoursInput.addEventListener('keydown', e => { if(e.key === 'Enter') { e.preventDefault(); handleConfirmHours(); } });
 
         const loadTargetDate = () => { targetDate = localStorage.getItem('dDayTarget'); };
         const saveTargetDate = () => { if (targetDate) localStorage.setItem('dDayTarget', targetDate); else localStorage.removeItem('dDayTarget'); };
         const updateDDayCounter = () => {
+            if (!dDayBtn) return;
             if (!targetDate) { dDayBtn.textContent = 'Set Target'; return; }
             const today = new Date(); today.setHours(0, 0, 0, 0);
             const parts = targetDate.split('-');
@@ -2011,24 +1878,10 @@
         };
         const openDDayModal = () => { dDayModal.classList.remove('hidden'); dDayInput.value = targetDate || ''; };
         const closeDDayModal = () => dDayModal.classList.add('hidden');
-        dDayBtn.addEventListener('click', openDDayModal);
-        cancelDDayBtn.addEventListener('click', closeDDayModal);
-        dDayModal.addEventListener('click', (e) => { if (e.target === dDayModal) closeDDayModal(); });
-        confirmDDayBtn.addEventListener('click', () => { if (dDayInput.value) { targetDate = dDayInput.value; saveTargetDate(); updateDDayCounter(); } closeDDayModal(); });
-
-        setEndTimeBtn.addEventListener('click', () => {
-            sessionEndTimeInput.value = studySessionEndTime || '23:00';
-            sessionEndTimeModal.classList.remove('hidden');
-        });
-
-        cancelEndTimeBtn.addEventListener('click', () => sessionEndTimeModal.classList.add('hidden'));
-
-        confirmEndTimeBtn.addEventListener('click', () => {
-            studySessionEndTime = sessionEndTimeInput.value;
-            saveSessionEndTime();
-            startOrUpdateCountdown();
-            sessionEndTimeModal.classList.add('hidden');
-        });
+        dDayBtn?.addEventListener('click', openDDayModal);
+        cancelDDayBtn?.addEventListener('click', closeDDayModal);
+        dDayModal?.addEventListener('click', (e) => { if (e.target === dDayModal) closeDDayModal(); });
+        confirmDDayBtn?.addEventListener('click', () => { if (dDayInput.value) { targetDate = dDayInput.value; saveTargetDate(); updateDDayCounter(); } closeDDayModal(); });
 
 
         // --- DASHBOARD LOGIC ---
@@ -2720,9 +2573,9 @@
                     <div class="w-10 h-10 rounded-lg flex items-center justify-center mr-3 flex-shrink-0" style="background-color: ${iconColor}33;">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" style="color:${iconColor}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
                     </div>
-                    <div class="flex-grow">
-                        <p class="font-semibold ${textStyle} flex items-center">${assignment.title} ${pdfBadge}</p>
-                        <p class="text-xs text-subtle ${isCompleted ? 'line-through' : ''}">${formattedDate}${formattedTime}</p>
+                    <div class="flex-grow min-w-0 mr-2">
+                        <p class="font-semibold ${textStyle} flex items-center"><span class="truncate mr-1" title="${assignment.title}">${assignment.title}</span> ${pdfBadge}</p>
+                        <p class="text-xs text-subtle ${isCompleted ? 'line-through' : ''} truncate">${formattedDate}${formattedTime}</p>
                     </div>
                     <div class="status-btn status-${assignment.status.replace(' ', '-').toLowerCase()} mr-2" data-id="${assignment.id}" data-source="${assignment.source}">
                         ${assignment.status}
@@ -2747,10 +2600,15 @@
                                     req.onerror = () => rej(req.error);
                                 });
                                 if (handle) {
-                                    if (await handle.queryPermission() !== 'granted') {
-                                        if (await handle.requestPermission() !== 'granted') return;
+                                    let file;
+                                    if (typeof handle.getFile === 'function') {
+                                        if (await handle.queryPermission() !== 'granted') {
+                                            if (await handle.requestPermission() !== 'granted') return;
+                                        }
+                                        file = await handle.getFile();
+                                    } else {
+                                        file = handle;
                                     }
-                                    const file = await handle.getFile();
                                     const url = URL.createObjectURL(file);
                                     window.open(url, '_blank');
                                 } else {
@@ -2945,6 +2803,27 @@
         confirmAssignmentBtn.addEventListener('click', handleConfirmAssignment);
         assignmentTitleInput.addEventListener('keydown', e => e.key === 'Enter' && assignmentDueDateInput.focus());
         assignmentDueDateInput.addEventListener('keydown', e => e.key === 'Enter' && handleConfirmAssignment());
+        
+        const massUploadInput = document.getElementById('mass-upload-assignment-input');
+        const massUploadBtn = document.getElementById('mass-upload-assignment-btn');
+        massUploadBtn?.addEventListener('click', () => massUploadInput.click());
+        massUploadInput?.addEventListener('change', async (e) => {
+            const files = e.target.files;
+            if (!files || files.length === 0) return;
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const newId = Date.now() + i;
+                const title = file.name.replace(/\.[^/.]+$/, ""); // strip extension
+                assignments.push({ id: newId, title: title, due: null, status: 'Upcoming', hasFile: true });
+                if (progressDb) {
+                    const tx = progressDb.transaction('assignmentFiles', 'readwrite');
+                    tx.objectStore('assignmentFiles').put(file, newId);
+                }
+            }
+            saveAssignments();
+            renderAssignments();
+            massUploadInput.value = '';
+        });
         
         const syncCourseData = () => {
             activeSubjectPool.forEach(subjectName => {
@@ -3808,4 +3687,7 @@
     </script>
 </body>
 </html>
+
+
+
 
