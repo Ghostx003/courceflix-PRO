@@ -2141,7 +2141,17 @@
             container.innerHTML = '';
             if (!subjectName || subjectName === 'N/A') return;
 
-            const facultyName = facultyData[subjectName];
+            let facultyName = facultyData[subjectName];
+
+            if (!facultyName) {
+                const cfSubjects = JSON.parse(localStorage.getItem('courseflix_subjects') || '[]');
+                const subjectInfo = cfSubjects.find(s => s.name === subjectName);
+                if (subjectInfo && subjectInfo.faculty && subjectInfo.faculty !== 'Unknown') {
+                    facultyName = subjectInfo.faculty;
+                    facultyData[subjectName] = facultyName;
+                    saveFacultyData();
+                }
+            }
 
             if (facultyName) {
                 container.innerHTML = `
@@ -2304,10 +2314,7 @@
                 mostStudiedSubjectEl.textContent = mostStudied;
                 mostStudiedHoursEl.textContent = `${formatMinutesToHoursAndMinutes(data.minutes)}`;
                 renderStarRating(mostStudiedRatingEl, mostStudied);
-                
-                const subjectInfo = cfSubjects.find(s => s.name === mostStudied);
-                const faculty = subjectInfo && subjectInfo.faculty ? subjectInfo.faculty : 'Unknown';
-                document.getElementById('most-studied-faculty-container').innerHTML = `<p class="font-medium">Faculty: <span class="text-main">${faculty}</span></p>`;
+                renderFacultyInfo(document.getElementById('most-studied-faculty-container'), mostStudied);
             } else {
                 mostStudiedSubjectEl.textContent = "N/A";
                 mostStudiedHoursEl.textContent = "No data";
@@ -2321,10 +2328,7 @@
                 leastStudiedSubjectEl.textContent = leastStudied;
                 leastStudiedHoursEl.textContent = `${formatMinutesToHoursAndMinutes(data.minutes)}`;
                 renderStarRating(leastStudiedRatingEl, leastStudied);
-                
-                const subjectInfo = cfSubjects.find(s => s.name === leastStudied);
-                const faculty = subjectInfo && subjectInfo.faculty ? subjectInfo.faculty : 'Unknown';
-                document.getElementById('least-studied-faculty-container').innerHTML = `<p class="font-medium">Faculty: <span class="text-main">${faculty}</span></p>`;
+                renderFacultyInfo(document.getElementById('least-studied-faculty-container'), leastStudied);
             } else {
                 leastStudiedSubjectEl.textContent = "N/A";
                 leastStudiedHoursEl.textContent = "No data";
