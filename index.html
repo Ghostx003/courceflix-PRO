@@ -482,7 +482,7 @@
             <a href="#" class="nav-link" data-view="continue-view">Continue</a>
             <a href="#" class="nav-link" data-view="history-view">History</a>
             <a href="plan.html" class="nav-link" style="color: var(--accent-secondary);">Planner <i class="fas fa-external-link-alt" style="font-size: 0.8em; margin-left: 4px;"></i></a>
-            <a href="progress.html" class="nav-link" style="color: var(--accent-secondary);">Progress App <i class="fas fa-external-link-alt" style="font-size: 0.8em; margin-left: 4px;"></i></a>
+            <a href="progress.html#dashboard" class="nav-link" style="color: var(--accent-secondary);">Performance <i class="fas fa-external-link-alt" style="font-size: 0.8em; margin-left: 4px;"></i></a>
         </div>
         <div id="total-time-left-display" class="info-display"></div>
         <button id="add-course-btn" class="primary-btn"><i class="fas fa-plus"></i> Add Course</button>
@@ -1341,7 +1341,7 @@
             }
         }
         
-        async function scanDirectoryHandle(dirHandle, basePath = '') {
+        async function scanDirectoryHandle(dirHandle, basePath = '', cachedLectures = []) {
             const chapters = {};
             const lectures = [];
             let totalDuration = 0;
@@ -1363,11 +1363,20 @@
                     if (entry.kind === 'file' && videoRegex.test(entry.name)) {
                         try {
                             const file = await entry.getFile();
-                            const duration = await getVideoDuration(file);
+                            const id = `${entry.name}_${file.size}_${file.lastModified}`;
+                            
+                            let duration = 0;
+                            const cached = cachedLectures.find(l => l.id === id);
+                            if (cached && cached.duration) {
+                                duration = cached.duration;
+                            } else {
+                                duration = await getVideoDuration(file);
+                            }
+
                             const lectureData = {
-                                id: `${entry.name}_${file.size}_${file.lastModified}`,
+                                id: id,
                                 name: entry.name.replace(/\.[^/.]+$/, ""),
-                                displayName: entry.name.replace(/\.[^/.]+$/, ""),
+                                displayName: cached && cached.displayName ? cached.displayName : entry.name.replace(/\.[^/.]+$/, ""),
                                 handle: entry,
                                 duration: duration,
                                 chapter: chapterName
@@ -1422,9 +1431,10 @@
                 const card = document.createElement('div');
                 card.className = 'course-card';
                 
-                if (course.isLinked && course.handle && !course.lectures) {
+                const needsHandleScan = course.lectures && course.lectures.length > 0 && !course.lectures[0].handle;
+                if (course.isLinked && course.handle && (!course.lectures || needsHandleScan)) {
                     try {
-                        const courseData = await scanDirectoryHandle(course.handle);
+                        const courseData = await scanDirectoryHandle(course.handle, '', course.lectures || []);
                         course.lectures = courseData.lectures;
                         course.totalDuration = courseData.totalDuration;
                         course.chapters = courseData.chapters;
@@ -2389,7 +2399,7 @@
                     }
                 }
 
-                const newCourseData = await scanDirectoryHandle(course.handle);
+                const newCourseData = await scanDirectoryHandle(course.handle, '', course.lectures || []);
                 
                 // Merge overriden custom relocated subfolder handles if any exist
                 if (course.subCourseData) {
@@ -2398,7 +2408,7 @@
                         if (subHandle) {
                             try {
                                 if (await subHandle.queryPermission({ mode: 'read' }) === 'granted') {
-                                    const subData = await scanDirectoryHandle(subHandle, subPath);
+                                    const subData = await scanDirectoryHandle(subHandle, subPath, course.lectures || []);
                                     // Remove old scan results for this subpath
                                     newCourseData.lectures = newCourseData.lectures.filter(l => !(l.chapter === subPath || l.chapter.startsWith(subPath + '/')));
                                     newCourseData.chapters = newCourseData.chapters.filter(ch => !(ch.name === subPath || ch.name.startsWith(subPath + '/')));
@@ -3396,7 +3406,26 @@
                 for (const course of courses) {
                     const cleanCourse = { ...course };
                     delete cleanCourse.handle; 
-                    delete cleanCourse.lectures; 
+                    
+                    if (cleanCourse.lectures) {
+                        cleanCourse.lectures = cleanCourse.lectures.map(l => {
+                            const cleanL = { ...l };
+                            delete cleanL.handle;
+                            return cleanL;
+                        });
+                    }
+                    if (cleanCourse.chapters) {
+                        cleanCourse.chapters = cleanCourse.chapters.map(c => {
+                            const cleanC = { ...c };
+                            cleanC.lectures = cleanC.lectures.map(l => {
+                                const cleanL = { ...l };
+                                delete cleanL.handle;
+                                return cleanL;
+                            });
+                            return cleanC;
+                        });
+                    }
+                    
                     if(course.handle) cleanCourse.folderName = course.handle.name;
                     
                     // Backup custom subfolder handles (only names, handles don't serialize)
