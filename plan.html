@@ -166,18 +166,31 @@
         .progress-yellow { background-color: #f59e0b; color: #111; }
         .progress-orange { background-color: #f97316; }
         .progress-green { background-color: #22c55e; }
+        .nav-item-custom-hover {
+            transition: all 0.2s ease;
+            border-radius: 0.5rem;
+        }
+        [data-theme="dark"] .nav-item-custom-hover:hover {
+            background-color: var(--bg-tertiary);
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.08), 0 0 0 1px rgba(255,255,255,0.05);
+            transform: translateY(-2px);
+        }
+        [data-theme="light"] .nav-item-custom-hover:hover {
+            background-color: var(--bg-tertiary);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 
 <body class="transition-colors duration-300">
     <nav id="top-navbar" class="fixed top-0 left-0 right-0 w-full z-40 bg-main/80 backdrop-blur-md transition-all duration-300 transform translate-y-0 shadow-lg flex justify-center items-center h-16">
         <div class="flex gap-2 sm:gap-4 items-center px-4 overflow-x-auto whitespace-nowrap" style="scrollbar-width: none;">
-            <a href="index.html" class="px-4 py-2 rounded-lg shadow-sm hover:shadow-md text-subtle font-medium hover:text-main hover:bg-tertiary transition-all flex items-center gap-2"><i class="fas fa-home"></i> CourseFlix</a>
-            <button data-action="showScheduleView" class="px-4 py-2 rounded-lg shadow-sm hover:shadow-md text-subtle font-medium hover:text-main hover:bg-tertiary transition-all">Schedule</button>
-            <button data-action="showSummaryView" class="px-4 py-2 rounded-lg shadow-sm hover:shadow-md text-subtle font-medium hover:text-main hover:bg-tertiary transition-all">Summary</button>
-            <button data-action="showProgressView" class="px-4 py-2 rounded-lg shadow-sm hover:shadow-md text-subtle font-medium hover:text-main hover:bg-tertiary transition-all">Progress</button>
-            <a href="clock.html" class="px-4 py-2 rounded-lg shadow-sm hover:shadow-md text-subtle font-medium hover:text-main hover:bg-tertiary transition-all flex items-center gap-2">Focus Clock <i class="fas fa-external-link-alt text-xs"></i></a>
-            <a href="progress.html" class="px-4 py-2 rounded-lg shadow-sm hover:shadow-md text-blue-400 font-medium hover:text-blue-300 hover:bg-tertiary transition-all flex items-center gap-2">Progress App <i class="fas fa-external-link-alt text-xs"></i></a>
+            <a href="index.html" class="px-4 py-2 nav-item-custom-hover text-subtle font-medium hover:text-main flex items-center gap-2"><i class="fas fa-home"></i> CourseFlix</a>
+            <button data-action="showScheduleView" class="px-4 py-2 nav-item-custom-hover text-subtle font-medium hover:text-main">Schedule</button>
+            <button data-action="showSummaryView" class="px-4 py-2 nav-item-custom-hover text-subtle font-medium hover:text-main">Summary</button>
+            <button data-action="showProgressView" class="px-4 py-2 nav-item-custom-hover text-subtle font-medium hover:text-main">Progress</button>
+            <a href="progress.html#dashboard" class="px-4 py-2 nav-item-custom-hover text-blue-400 font-medium hover:text-blue-300 flex items-center gap-2">Performance <i class="fas fa-external-link-alt text-xs"></i></a>
         </div>
     </nav>
     <div id="sidebar-overlay" data-action="toggleSidebar" class="fixed inset-0 z-40 hidden opacity-0"></div>
@@ -557,6 +570,11 @@ document.addEventListener('DOMContentLoaded', () => {
         delete stateToSave.p2p; 
         localStorage.setItem('studyPlannerState', JSON.stringify(stateToSave)); 
         localStorage.setItem('studyData', JSON.stringify(state.studyData));
+        if (state.settings.sessionEndTime) {
+            localStorage.setItem('studySessionEndTime', state.settings.sessionEndTime);
+        } else {
+            localStorage.removeItem('studySessionEndTime');
+        }
     };
     const loadState = () => {
         const savedState = localStorage.getItem('studyPlannerState');
@@ -1689,7 +1707,7 @@ document.addEventListener('DOMContentLoaded', () => {
             enhancedSaveState();
             renderProgressView();
         },
-        editStartTime: (el) => { const itemId = el.dataset.itemId; const item = state.studyData[formatDateKey(new Date())]?.find(i => i.id == itemId); if (!item) return; const container = el.parentElement; const originalTime = formatTimeTo24hr(new Date(item.startTime)); const input = document.createElement('input'); input.type = 'time'; input.className = 'input-main text-sm p-0.5 w-24 rounded-md'; input.value = originalTime; container.replaceChild(input, el); input.focus(); const saveAndRender = () => { if (input.value && input.value !== originalTime) { const [newHour, newMinute] = input.value.split(':'); if (newHour && newMinute) { item.startTime.setHours(parseInt(newHour), parseInt(newMinute)); const schedule = state.studyData[formatDateKey(new Date())]; const itemIndex = schedule.findIndex(i => i.id == itemId); recalculateStartTimes(itemIndex + 1); enhancedSaveState(); } } render(); }; input.addEventListener('blur', saveAndRender, { once: true }); input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { input.blur(); } if (e.key === 'Escape') { input.removeEventListener('blur', saveAndRender); render(); } }); },
+        editStartTime: (el) => { const itemId = el.dataset.itemId; const item = state.studyData[formatDateKey(new Date())]?.find(i => i.id == itemId); if (!item) return; const container = el.parentElement; const originalTime = formatTimeTo24hr(new Date(item.startTime || Date.now())); const input = document.createElement('input'); input.type = 'time'; input.className = 'input-main text-sm p-0.5 w-24 rounded-md'; input.value = originalTime; container.replaceChild(input, el); input.focus(); const saveAndRender = () => { if (input.value && input.value !== originalTime) { const [newHour, newMinute] = input.value.split(':'); if (newHour && newMinute) { item.startTime = new Date(item.startTime || Date.now()); item.startTime.setHours(parseInt(newHour), parseInt(newMinute)); const schedule = state.studyData[formatDateKey(new Date())]; const itemIndex = schedule.findIndex(i => i.id == itemId); recalculateStartTimes(itemIndex + 1); enhancedSaveState(); } } render(); }; input.addEventListener('blur', saveAndRender, { once: true }); input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { input.blur(); } if (e.key === 'Escape') { input.removeEventListener('blur', saveAndRender); render(); } }); },
         editBreakText: (el) => { const itemId = el.dataset.itemId; const item = state.studyData[formatDateKey(new Date())]?.find(i => i.id == itemId); if (!item || item.type !== 'break') return; const container = el.parentElement; const input = document.createElement('input'); input.type = 'text'; input.className = 'font-bold text-main bg-transparent border-b border-main focus:outline-none flex-grow'; input.value = item.text || 'Break'; container.replaceChild(input, el); input.focus(); input.select(); const saveAndExit = () => { const newText = input.value.trim(); item.text = newText || 'Break'; enhancedSaveState(); render(); }; input.addEventListener('blur', saveAndExit); input.addEventListener('keydown', e => { if (e.key === 'Enter') input.blur(); if (e.key === 'Escape') { input.removeEventListener('blur', saveAndExit); render(); } }); },
         confirmEditHours: (el) => {
             const hoursInput = DOM.hoursInput;
@@ -2707,6 +2725,7 @@ document.addEventListener('DOMContentLoaded', () => {
             lastSessionEndStr = currentSessionEnd;
             changed = true;
         }
+        
         if (changed) {
             loadState();
             render();
