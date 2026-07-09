@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         /* --- THEME & ACCENT COLOR VARIABLES --- */
+        html { background-color: #000000; overflow: hidden; }
         :root {
             --bg-primary: #f9fafb; --bg-secondary: #ffffff; --bg-tertiary: #f3f4f6;
             --text-primary: #1f2937; --text-secondary: #6b7280; --text-on-accent: #ffffff;
@@ -23,6 +24,7 @@
             --border-primary: #27272a; --border-secondary: #3f3f46;
             --shadow: 0 1px 3px 0 rgb(255 255 255 / 0.1), 0 1px 2px -1px rgb(255 255 255 / 0.08);
         }
+        html[data-theme="light"] { background-color: #f9fafb; }
         html[data-accent="green"] {
             --accent-primary: #16a34a; --accent-hover: #15803d;
             --accent-primary_translucent: rgba(34, 197, 94, 0.4);
@@ -488,7 +490,7 @@
         <button id="add-course-btn" class="primary-btn"><i class="fas fa-plus"></i> Add Course</button>
     </nav>
 
-    <div id="dashboard-view" class="view active">
+    <div id="dashboard-view-el" class="view active">
         <div style="padding: 10px 24px; display: flex; justify-content: flex-end; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-primary); background: var(--bg-primary);">
             <label for="course-sort-select" style="font-size: 0.9rem; color: var(--text-secondary); font-weight: 600;">Sort by:</label>
             <select id="course-sort-select" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-secondary); background: var(--bg-tertiary); color: var(--text-primary); font-family: inherit; font-size: 0.85rem; font-weight: 500; cursor: pointer;">
@@ -675,7 +677,7 @@
     <!-- Doubt Full Overlay -->
     <div id="doubt-full-overlay" class="hidden">
         <div class="doubt-full-left">
-            <img id="doubt-full-img" src="" alt="Doubt Screenshot">
+            <img id="doubt-full-img" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Doubt Screenshot">
         </div>
         <div class="doubt-full-right">
             <div class="doubt-right-header">
@@ -834,6 +836,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // Prevent browser's native scroll-to-hash from pushing nav out of view
+        if (window.location.hash) {
+            history.scrollRestoration = 'manual';
+            window.scrollTo(0, 0);
+            setTimeout(() => {
+                window.scrollTo(0, 0);
+                document.documentElement.scrollTop = 0;
+                document.body.scrollTop = 0;
+            }, 10);
+        }
         const DB_NAME = 'CourseFlixDB';
         const DB_VERSION = 11; // Incremented version for history store
         const STORE_NAME = 'courses';
@@ -1286,7 +1298,12 @@
 
         // --- View Switching & Rendering ---
         function switchView(viewId, pushState = true) {
-            nav.classList.toggle('hidden', ['player-view', 'dpp-upload-view', 'filter-results-view', 'notes-detail-view', 'dpp-detail-view'].includes(viewId));
+            const hideNavViews = ['player-view', 'dpp-upload-view', 'filter-results-view', 'notes-detail-view', 'dpp-detail-view'];
+            if (hideNavViews.includes(viewId)) {
+                nav.classList.add('hidden');
+            } else {
+                nav.classList.remove('hidden');
+            }
             
             if (pushState && viewId !== 'subcourse-view' && viewId !== 'player-view') {
                 const newHash = '#' + viewId;
@@ -1295,7 +1312,8 @@
                 }
             }
 
-            views.forEach(view => view.classList.toggle('active', view.id === viewId));
+            const targetId = viewId === 'dashboard-view' ? 'dashboard-view-el' : viewId;
+            views.forEach(view => view.classList.toggle('active', view.id === targetId));
             navLinks.forEach(link => link.classList.toggle('active', link.dataset.view === viewId));
             
             if (viewId === 'review-view' || viewId === 'practice-view') {
@@ -2377,7 +2395,8 @@
             } catch (error) {
                 console.error("Failed to load video:", error);
                 showToast("Could not load video. The original file may have been moved or deleted.", true);
-                videoPlayer.src = "";
+                videoPlayer.removeAttribute('src');
+                sessionStorage.removeItem('courseflixState');
                 videoPlayer.load();
             }
         }
@@ -2531,7 +2550,7 @@
                 URL.revokeObjectURL(activeFileUrl);
                 activeFileUrl = null;
             }
-            mediaViewerFrame.src = 'about:blank';
+            mediaViewerFrame.removeAttribute('src'); mediaViewerFrame.srcdoc = '';
             activeViewerFileType = null;
             playerView.style.setProperty('--viewer-width', '0px');
             updateMediaViewerToggleButton();
@@ -3124,7 +3143,7 @@
             // Save last played lecture before leaving
             await saveLastPlayedLecture();
             sessionStorage.removeItem('courseflixState');
-            videoPlayer.pause(); videoPlayer.src = ""; videoPlayer.load();
+            videoPlayer.pause(); videoPlayer.removeAttribute('src'); videoPlayer.load();
             hideMediaViewer();
             const targetView = backToLibraryBtn.dataset.view || 'dashboard-view';
             if (targetView === 'subcourse-view') {
@@ -4321,7 +4340,7 @@
                     if (typeof syncCourseflixSubjects === 'function') syncCourseflixSubjects();
                     const courseId = parseInt(document.getElementById('dpp-detail-container').dataset.courseId);
                     await renderDppDetailView(courseId);
-                    document.getElementById('dpp-viewer-frame').src = 'about:blank';
+                    document.getElementById('dpp-viewer-frame').removeAttribute('src'); document.getElementById('dpp-viewer-frame').srcdoc = '';
                     document.getElementById('dpp-viewer-frame').style.display = 'block';
                     document.getElementById('dpp-viewer-header').classList.add('hidden');
                     document.getElementById('dpp-no-content-message').innerHTML = 'Select a DPP from the sidebar to view it.';
@@ -4532,7 +4551,7 @@
                     saveLectureProgress(progress);
                     renderNotesDetailView(courseId);
                     showToast('Note deleted');
-                    document.getElementById('notes-viewer-frame').src = 'about:blank';
+                    document.getElementById('notes-viewer-frame').removeAttribute('src'); document.getElementById('notes-viewer-frame').srcdoc = '';
                     document.getElementById('notes-viewer-frame').style.display = 'block';
                     document.getElementById('notes-viewer-header').classList.add('hidden');
                     document.getElementById('notes-no-content-message').innerHTML = 'Select a note from the sidebar to view it.';
@@ -5072,16 +5091,24 @@
             const savedStateJSON = sessionStorage.getItem('courseflixState');
             // Always try to restore the player session so a refresh doesn't lose context
             if (savedStateJSON) {
-                const savedState = JSON.parse(savedStateJSON);
-                if (savedState.view === 'player-view' && savedState.courseId && savedState.lectureId) {
-                    if (savedState.sidebarCollapsed) {
-                        lectureMenu.classList.add('hidden');
-                        sidebarToggleBtn.classList.add('collapsed');
-                    }
-                    const courseExists = courses.some(c => c.id === savedState.courseId);
-                    if (courseExists) {
-                      await renderPlayer(savedState.courseId, savedState.lectureId, savedState.lastView, savedState.currentTime, savedState.subfolder);
-                      sessionRestored = true;
+                const navEntries = performance.getEntriesByType("navigation");
+                const isReload = navEntries.length > 0 && navEntries[0].type === "reload";
+                const isExplicitNavigation = !isReload && window.location.hash && window.location.hash !== '#player-view';
+                
+                if (isExplicitNavigation) {
+                    sessionStorage.removeItem('courseflixState');
+                } else {
+                    const savedState = JSON.parse(savedStateJSON);
+                    if (savedState.view === 'player-view' && savedState.courseId && savedState.lectureId) {
+                        if (savedState.sidebarCollapsed) {
+                            lectureMenu.classList.add('hidden');
+                            sidebarToggleBtn.classList.add('collapsed');
+                        }
+                        const courseExists = courses.some(c => c.id === savedState.courseId);
+                        if (courseExists) {
+                          await renderPlayer(savedState.courseId, savedState.lectureId, savedState.lastView, savedState.currentTime, savedState.subfolder);
+                          sessionRestored = true;
+                        }
                     }
                 }
             }
@@ -5139,7 +5166,22 @@
                 switchView('dashboard-view');
             }
         }
-        main();
+        main().catch(err => {
+            console.error('CourseFlix init error:', err);
+            // Safety net: if main() fails, ensure nav is visible and dashboard is shown
+            const navEl = document.querySelector('nav');
+            if (navEl) navEl.classList.remove('hidden');
+            const dashView = document.getElementById('dashboard-view-el');
+            if (dashView) dashView.classList.add('active');
+        }).finally(() => {
+            // Always ensure nav is visible for non-player views after init
+            const navEl = document.querySelector('nav');
+            const activeView = document.querySelector('.view.active');
+            const hideNavViews = ['player-view', 'dpp-upload-view', 'filter-results-view', 'notes-detail-view', 'dpp-detail-view'];
+            if (navEl && activeView && !hideNavViews.includes(activeView.id)) {
+                navEl.classList.remove('hidden');
+            }
+        });
     });
     </script>
 </body>
