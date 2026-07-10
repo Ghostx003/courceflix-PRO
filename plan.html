@@ -180,6 +180,7 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
             transform: translateY(-2px);
         }
+        .nav-item-active { color: var(--accent-primary) !important; font-weight: 700 !important; }
     </style>
 </head>
 
@@ -569,14 +570,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const stateToSave = { ...state }; 
         delete stateToSave.p2p; 
         localStorage.setItem('studyPlannerState', JSON.stringify(stateToSave)); 
-        localStorage.setItem('studyData', JSON.stringify(state.studyData));
+        const studyDataStr = JSON.stringify(state.studyData);
+        localStorage.setItem('studyData', studyDataStr);
+        if (typeof lastStudyDataStr !== 'undefined') lastStudyDataStr = studyDataStr;
+        
         if (state.settings.sessionEndTime) {
             localStorage.setItem('studySessionEndTime', state.settings.sessionEndTime);
+            if (typeof lastSessionEndStr !== 'undefined') lastSessionEndStr = state.settings.sessionEndTime;
         } else {
             localStorage.removeItem('studySessionEndTime');
+            if (typeof lastSessionEndStr !== 'undefined') lastSessionEndStr = null;
         }
     };
     const loadState = () => {
+        const currentOpenPanels = state.ui.openSubTaskPanels;
+        const currentCollapsedSubjects = state.ui.collapsedProgressSubjects;
         const savedState = localStorage.getItem('studyPlannerState');
         if (savedState) {
             const parsedState = JSON.parse(savedState);
@@ -595,8 +603,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 state.progressColumnSchema.forEach(c => delete c.isPrimary);
             }
 
-            state.ui.openSubTaskPanels = new Set(Array.from(state.ui.openSubTaskPanels || []));
-            state.ui.collapsedProgressSubjects = new Set(Array.from(state.ui.collapsedProgressSubjects || []));
+            state.ui.openSubTaskPanels = currentOpenPanels;
+            state.ui.collapsedProgressSubjects = currentCollapsedSubjects;
             
             // Sync with global keys for single-source-of-truth behavior
             const globalStudyData = localStorage.getItem('studyData');
@@ -789,13 +797,18 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.summaryView.classList.add('hidden');
         DOM.progressView.classList.add('hidden');
 
+        document.querySelectorAll('[data-action="showSummaryView"], [data-action="showProgressView"], [data-action="showScheduleView"]').forEach(b => b.classList.remove('nav-item-active'));
+
         if (state.ui.currentView === 'summary') {
+            document.querySelectorAll('[data-action="showSummaryView"]').forEach(b => b.classList.add('nav-item-active'));
             DOM.summaryView.classList.remove('hidden');
             setupSummaryView();
         } else if (state.ui.currentView === 'progress') {
+            document.querySelectorAll('[data-action="showProgressView"]').forEach(b => b.classList.add('nav-item-active'));
             DOM.progressView.classList.remove('hidden');
             renderProgressView();
         } else {
+            document.querySelectorAll('[data-action="showScheduleView"]').forEach(b => b.classList.add('nav-item-active'));
             DOM.scheduleView.classList.remove('hidden');
             const today = new Date(); 
             DOM.todayDate.textContent = today.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); 
@@ -1735,16 +1748,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else {
                 const newDuration = subjectItem.type === 'break' ? value / 60 : value;
-                if(subjectItem.type === 'subject') {
-                    const { subTasks, totalDuration, focusTopic } = generateSubTasksForSubject(subjectItem.name, newDuration, subjectItem.focusTopic);
-                    subjectItem.subTasks = subTasks;
-                    subjectItem.durationHours = totalDuration; 
-                    subjectItem.originalDuration = newDuration; 
-                    subjectItem.focusTopic = focusTopic;
-                } else {
-                    subjectItem.durationHours = newDuration;
-                    subjectItem.originalDuration = newDuration;
-                }
+                subjectItem.durationHours = newDuration;
+                subjectItem.originalDuration = newDuration;
             }
             
             recalculateStartTimes(0);
@@ -2420,10 +2425,11 @@ document.addEventListener('DOMContentLoaded', () => {
             let tasksAddedInLoop = 0;
             if (focusTopic === 'ALL') {
                 const unlockedTopics = hasLEC ? allTopics.filter(topic => (state.progress[subjectName]?.[topic] || []).includes('LEC')) : [...allTopics];
-                const scheduledLecture = subTasks.find(t => t.activity === 'LEC');
-                if (scheduledLecture && !unlockedTopics.includes(scheduledLecture.topic)) {
-                    unlockedTopics.push(scheduledLecture.topic);
-                }
+                subTasks.filter(t => t.activity === 'LEC').forEach(scheduledLecture => {
+                    if (!unlockedTopics.includes(scheduledLecture.topic)) {
+                        unlockedTopics.push(scheduledLecture.topic);
+                    }
+                });
                 const newTasks = generateMultiTopicMixedTasks(subjectName, timeRemaining, unlockedTopics, subTasks);
                 if (newTasks.length > 0) {
                     subTasks.push(...newTasks);
@@ -2440,7 +2446,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if(tasksAddedInLoop === 0) {
-                availableActivitiesExist = false;
+                let unlockedNewTopic = false;
+                if (hasLEC && focusTopic === 'ALL') {
+                    const allLocked = allTopics.filter(t => !(state.progress[subjectName]?.[t] || []).includes('LEC') && !subTasks.some(st => st.topic === t && st.activity === 'LEC'));
+                    if (allLocked.length > 0) {
+                        const nextTopic = allLocked[0];
+                        const taskDef = getTaskDefinition('LEC');
+                        if (taskDef && timeRemaining >= taskDef.duration) {
+                            subTasks.push({ text: `${taskDef.text}: ${nextTopic}`, status: taskDef.status, hours: taskDef.duration, completed: false, topic: nextTopic, activity: 'LEC' });
+                            timeRemaining -= taskDef.duration;
+                            unlockedNewTopic = true;
+                        }
+                    }
+                }
+                
+                if (!unlockedNewTopic) {
+                    availableActivitiesExist = false;
+                }
             }
         }
         
@@ -2504,6 +2526,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // --- EVENT LISTENERS ---
+
+    document.body.addEventListener('auxclick', (e) => {
+        if (e.button === 1) {
+            const navBtn = e.target.closest('nav button, #sidebar button');
+            if (navBtn) {
+                const action = navBtn.dataset.action;
+                let hash = '';
+                if (action === 'showSummaryView') hash = '#summary';
+                else if (action === 'showProgressView') hash = '#progress';
+                else if (action === 'showScheduleView') hash = '#schedule';
+                if (hash) {
+                    e.preventDefault();
+                    window.open(window.location.href.split('#')[0] + hash, '_blank');
+                }
+            }
+        }
+    });
 
     document.body.addEventListener('click', (e) => {
         if (!audioInitialized && typeof Tone !== 'undefined') { Tone.start().then(() => { initializeAudio(); console.log('Audio context started!'); }); }
@@ -2688,6 +2727,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const init = () => {
         loadState();
         initializeProgressData();
+        const hash = window.location.hash;
+        if (hash === '#summary') state.ui.currentView = 'summary';
+        else if (hash === '#progress') state.ui.currentView = 'progress';
         render();
         setupNotificationTimer();
     };
