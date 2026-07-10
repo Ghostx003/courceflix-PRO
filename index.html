@@ -1009,7 +1009,7 @@
                 
                 if (data.completed) {
                     if (logIndex === -1) {
-                        let faculty = data.faculty || (typeof currentCourse !== 'undefined' && currentCourse && currentCourse.id === data.courseId ? currentCourse.faculty : 'Unknown');
+                        let faculty = data.faculty || (typeof currentCourse !== 'undefined' && currentCourse && currentCourse.id === data.courseId ? (currentCourse.subCourseData && currentSubfolder && currentCourse.subCourseData[currentSubfolder]?.facultyName ? currentCourse.subCourseData[currentSubfolder].facultyName : currentCourse.facultyName) || 'Unknown' : 'Unknown');
                         let chapter = data.chapter || (typeof currentCourse !== 'undefined' && currentCourse && currentCourse.lectures ? (currentCourse.lectures.find(l => l.id === data.lectureId)?.chapter || 'Unknown') : 'Unknown');
                         
                         cfLogs.push({
@@ -2575,6 +2575,15 @@
             if (target && target.dataset.view) {
                 e.preventDefault(); 
                 switchView(target.dataset.view); 
+            }
+        }));
+        navLinks.forEach(link => link.addEventListener('auxclick', (e) => {
+            if (e.button === 1) {
+                const target = e.target.closest('.nav-link');
+                if (target && target.dataset.view) {
+                    e.preventDefault();
+                    window.open(window.location.href.split('#')[0] + '#' + target.dataset.view, '_blank');
+                }
             }
         }));
         homeBtn.addEventListener('click', () => switchView('dashboard-view'));
