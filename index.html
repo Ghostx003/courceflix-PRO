@@ -118,8 +118,8 @@
             display: flex; align-items: center; justify-content: center; position: relative;
             flex-shrink: 0; cursor: pointer; background-size: cover; background-position: center;
         }
-        .thumbnail-placeholder i { font-size: 2.5rem; color: var(--text-secondary); opacity: 0.4; }
-        .thumbnail-placeholder.has-thumbnail i { display: none; }
+        .thumbnail-placeholder > i { font-size: 2.5rem; color: var(--text-secondary); opacity: 0.4; }
+        .thumbnail-placeholder.has-thumbnail > i { display: none; }
         .remove-course-btn, .relocate-course-btn, .remove-thumbnail-btn, .refresh-course-btn {
             position: absolute; background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 50%; width: 28px; height: 28px;
             cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; z-index: 2;
@@ -730,7 +730,14 @@
                     <h2 style="margin: 0;">Continue Studying</h2>
                     <p style="color: var(--text-secondary); margin: 5px 0 0 0;">Courses you've accessed in the last 30 hours</p>
                 </div>
-                <button id="clear-continue-btn" class="secondary-btn"><i class="fas fa-trash"></i> Clear All</button>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <select id="continue-sort-select" class="input-main" style="padding: 6px 10px;">
+                        <option value="last_studied">Sort by: Last Studied</option>
+                        <option value="most_studied">Sort by: Most Studied</option>
+                        <option value="least_studied">Sort by: Least Studied</option>
+                    </select>
+                    <button id="clear-continue-btn" class="secondary-btn"><i class="fas fa-trash"></i> Clear All</button>
+                </div>
             </div>
             <main id="history-continue-grid" class="grid-container"></main>
         </div>
@@ -1203,6 +1210,14 @@
             return courseProgress[`${courseId}_${lectureId}`] || {};
         }
 
+        function getSubfolderDisplayName(course, subfolder) {
+            if (!subfolder) return '';
+            if (course && course.subCourseData && course.subCourseData[subfolder] && course.subCourseData[subfolder].customName) {
+                return course.subCourseData[subfolder].customName;
+            }
+            return subfolder.split('/').pop();
+        }
+
         function calculateCourseProgress(course) {
             if (!course.lectures) return { completed: 0, total: course.videoCount || 0, percentage: 0, remainingDuration: course.totalDuration || 0, totalDuration: course.totalDuration || 0 };
             let completed = 0;
@@ -1649,7 +1664,7 @@
             viewEl.dataset.currentPath = basePath;
             viewEl.dataset.courseId = courseId;
             
-            const titleDisplay = basePath === '' ? course.title : basePath.split('/').pop();
+            const titleDisplay = basePath === '' ? course.title : getSubfolderDisplayName(course, basePath);
             document.getElementById('subcourse-parent-title').textContent = titleDisplay + " (Folders)";
 
             const backLink = document.getElementById('back-to-dashboard-from-sub');
@@ -1660,7 +1675,7 @@
                 if (basePath === '') {
                     backLink.innerHTML = '&larr; Back to Dashboard';
                 } else {
-                    backLink.textContent = '\u2190 Back to ' + (getParentPath(basePath) === '' ? course.title : getParentPath(basePath).split('/').pop());
+                    backLink.textContent = '\u2190 Back to ' + (getParentPath(basePath) === '' ? course.title : getSubfolderDisplayName(course, getParentPath(basePath)));
                 }
             }
 
@@ -1668,7 +1683,7 @@
                 const subData = course.subCourseData[fullPath] || {};
                 if (subData.hidden) return; // Skip hidden subcourses
 
-                const folderNameOnly = fullPath.split('/').pop();
+                const folderNameOnly = getSubfolderDisplayName(course, fullPath);
                 const faculty = subData.facultyName || course.facultyName || 'N/A Faculty';
                 const rating = subData.rating !== undefined ? subData.rating : (course.rating || 0);
                 const thumb = subData.thumbnail || course.thumbnail || null;
@@ -1899,14 +1914,14 @@
             subfolderView.dataset.courseId = courseId;
             subfolderView.dataset.currentPath = basePath;
 
-            const titleDisplay = basePath === '' ? course.title : basePath.split('/').pop();
+            const titleDisplay = basePath === '' ? course.title : getSubfolderDisplayName(course, basePath);
             document.getElementById('upload-subfolder-title').textContent = titleDisplay + " (Upload Folders)";
 
             const backLink = document.getElementById('back-to-upload-from-subfolder');
             if (basePath === '') {
                 backLink.textContent = '\u2190 Back to Upload';
             } else {
-                backLink.textContent = '\u2190 Back to ' + (getParentPath(basePath) === '' ? course.title : getParentPath(basePath).split('/').pop());
+                backLink.textContent = '\u2190 Back to ' + (getParentPath(basePath) === '' ? course.title : getSubfolderDisplayName(course, getParentPath(basePath)));
             }
 
             const relevantChapters = course.chapters.filter(ch => basePath === '' || ch.name.startsWith(basePath + '/') || ch.name === basePath);
@@ -1926,7 +1941,8 @@
 
             if (immediateSubfolders.length === 0) {
                 // No deeper subfolders - go directly to lecture upload detail
-                subfolderView.classList.add('hidden');
+                document.getElementById('upload-subfolder-view').classList.add('hidden');
+                document.getElementById('upload-detail-view').classList.remove('hidden');
                 await renderLectureUploadDetail(parseInt(courseId), basePath);
                 return;
             }
@@ -1935,7 +1951,7 @@
                 const subData = course.subCourseData[fullPath] || {};
                 if (subData.hidden) return;
 
-                const folderNameOnly = fullPath.split('/').pop();
+                const folderNameOnly = getSubfolderDisplayName(course, fullPath);
                 const faculty = subData.facultyName || course.facultyName || 'N/A Faculty';
                 const thumb = subData.thumbnail || course.thumbnail || null;
                 const subLectures = course.lectures.filter(l => l.chapter === fullPath || l.chapter.startsWith(fullPath + '/'));
@@ -2005,7 +2021,7 @@
             // Set title and back link
             const backLink = document.getElementById('back-to-upload-grid');
             if (subfolder) {
-                const folderName = subfolder.split('/').pop();
+                const folderName = getSubfolderDisplayName(course, subfolder);
                 document.getElementById('upload-course-title').textContent = `${course.title} \u00BB ${folderName}`;
                 backLink.textContent = '\u2190 Back to Folders';
             } else {
@@ -2138,7 +2154,7 @@
 
             if (subfolder) {
                 chaptersToDisplay = chaptersToDisplay.filter(ch => ch.name === subfolder || ch.name.startsWith(subfolder + '/'));
-                courseTitleMenu.textContent = `${currentCourse.title} - ${subfolder.split('/').pop()}`;
+                courseTitleMenu.textContent = `${currentCourse.title} - ${getSubfolderDisplayName(currentCourse, subfolder)}`;
                 // Only set back view to subcourse-view if we didn't come from doubts, continue, or history (preserve those origins)
                 if (originView !== 'doubts-detail-view' && originView !== 'continue-view' && originView !== 'history-view') {
                     backToLibraryBtn.dataset.view = 'subcourse-view';
@@ -2966,9 +2982,6 @@
                 const courseCard = titleH3.closest('.course-card');
                 if (!courseCard || titleH3.querySelector('input')) return;
                 
-                // Do not allow editing titles of split subfolders via UI, only main titles
-                if (courseCard.dataset.subfolder) return; 
-
                 const originalText = titleH3.textContent;
                 titleH3.innerHTML = `<input type="text" class="course-info-input" value="${originalText}" />`;
                 const input = titleH3.querySelector('input');
@@ -2984,9 +2997,17 @@
                     titleH3.textContent = newTitle || originalText;
                     titleH3.title = (newTitle || originalText) + " (Double-click to edit)";
                     
-                    if (newTitle && newTitle !== course.title) {
-                        course.title = newTitle;
-                        await new Promise(resolve => getStore(STORE_NAME, 'readwrite').put(course).onsuccess = resolve);
+                    if (newTitle && newTitle !== originalText) {
+                        const subfolder = courseCard.dataset.subfolder;
+                        if (subfolder) {
+                            course.subCourseData = course.subCourseData || {};
+                            course.subCourseData[subfolder] = course.subCourseData[subfolder] || {};
+                            course.subCourseData[subfolder].customName = newTitle;
+                            await new Promise(resolve => getStore(STORE_NAME, 'readwrite').put(course).onsuccess = resolve);
+                        } else if (newTitle !== course.title) {
+                            course.title = newTitle;
+                            await new Promise(resolve => getStore(STORE_NAME, 'readwrite').put(course).onsuccess = resolve);
+                        }
                     }
                 };
                 input.addEventListener('blur', saveTitle);
@@ -5006,17 +5027,71 @@
             if (uniqueCoursesMap.size === 0) {
                 continueGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-secondary);">No courses studied in the last 30 hours.</p>';
             } else {
-                for (const h of uniqueCoursesMap.values()) {
+                let courseList = Array.from(uniqueCoursesMap.values());
+                const sortSelect = document.getElementById('continue-sort-select');
+                const sortVal = localStorage.getItem('continueSortPref') || 'last_studied';
+                if (sortSelect && sortSelect.value !== sortVal) sortSelect.value = sortVal;
+                
+                // Fetch course references and calculate progress
+                courseList.forEach(h => {
                     const course = courses.find(c => c.id === h.courseId);
-                    if (!course) continue;
+                    if (course) {
+                        h._progress = calculateCourseProgress(course, h.subfolder);
+                        h._course = course;
+                    }
+                });
+                
+                // Filter out entries where course no longer exists
+                courseList = courseList.filter(h => h._course);
+                
+                // Apply sorting
+                if (sortVal === 'most_studied') {
+                    courseList.sort((a, b) => b._progress.percentage - a._progress.percentage);
+                } else if (sortVal === 'least_studied') {
+                    courseList.sort((a, b) => a._progress.percentage - b._progress.percentage);
+                }
+                // (last_studied is already the default from the earlier timestamp sort)
+
+                for (const h of courseList) {
+                    const course = h._course;
+                    const progress = h._progress;
                     
                     let cardThumbnail = course.thumbnail;
                     if (h.subfolder && course.subCourseData && course.subCourseData[h.subfolder] && course.subCourseData[h.subfolder].thumbnail) {
                         cardThumbnail = course.subCourseData[h.subfolder].thumbnail;
                     }
                     
-                    const cardTitle = h.subfolder ? h.subfolder.split('/').pop() : course.title;
-                    const cardSubtitle = h.subfolder ? `Course: ${course.title}` : `Last: ${h.lectureName}`;
+                    let rawTitle = course.title;
+                    let titleHTML = `<span style="color: var(--text-primary); flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${course.title}</span>`;
+                    
+                    if (h.subfolder) {
+                        const subName = getSubfolderDisplayName(course, h.subfolder);
+                        rawTitle = `${course.title} - ${subName}`;
+                        titleHTML += ` <span style="color: #22c55e; font-size: 0.85rem; margin-left: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 1;">${subName}</span>`;
+                    }
+                    
+                    let lectureIndexStr = '';
+                    if (course.lectures) {
+                        let filteredLectures = course.lectures;
+                        // If the subfolder is marked as 'Ignored', count relative to the subfolder
+                        const isSubfolderIgnored = h.subfolder && course.subCourseData && course.subCourseData[h.subfolder] && course.subCourseData[h.subfolder].isIgnored;
+                        if (isSubfolderIgnored) {
+                            filteredLectures = course.lectures.filter(l => l.chapter === h.subfolder || l.chapter.startsWith(h.subfolder + '/'));
+                        }
+                        const idx = filteredLectures.findIndex(l => l.id === h.lectureId);
+                        if (idx !== -1) {
+                            lectureIndexStr = ` <span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:transparent; color:#22c55e; border:1px solid #22c55e; font-size:0.8rem; margin-left:16px; font-weight:600; flex-shrink:0;">${idx + 1}</span>`;
+                        }
+                    }
+                    
+                    const cardSubtitle = `<div style="display: inline-flex; align-items: center; background: linear-gradient(90deg, rgba(59,130,246,0.25) 0%, rgba(59,130,246,0.05) 100%); border-left: 2px solid #3b82f6; border-radius: 4px; padding: 4px 8px; max-width: 100%; box-sizing: border-box; overflow: hidden;">
+                        <span style="color: #ffffff; font-weight: bold; font-size: 0.8rem; margin-right: 6px; flex-shrink: 0; letter-spacing: 0.5px;">LEC -</span>
+                        <span style="color: #ef4444; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500;">${h.lectureName}</span>
+                    </div>${lectureIndexStr}`;
+                    
+                    const lastStudiedDate = new Date(h.timestamp);
+                    const formattedDate = lastStudiedDate.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+                    const timeRemainingHrs = Math.ceil((progress.remainingDuration || 0) / 3600);
                     
                     const card = document.createElement('div');
                     card.className = 'course-card';
@@ -5024,13 +5099,22 @@
                         <div class="thumbnail-placeholder ${cardThumbnail ? 'has-thumbnail' : ''}" style="${cardThumbnail ? `background-image: url('${cardThumbnail}')` : ''}">
                             <i class="fas fa-history" style="font-size: 3rem;"></i>
                         </div>
-                        <div class="course-info" style="position: relative;">
+                        <div class="course-info" style="position: relative; overflow: hidden;">
                             <button class="delete-continue-btn" data-course="${course.id}" data-subfolder="${h.subfolder || ''}" style="position: absolute; top: -10px; right: -10px; background: var(--bg-tertiary); border: 1px solid var(--border-secondary); color: var(--accent-danger); width: 28px; height: 28px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;"><i class="fas fa-times"></i></button>
-                            <div>
-                                <h3 title="${cardTitle}">${cardTitle}</h3>
-                                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">${cardSubtitle}</p>
+                            <div style="overflow: hidden; max-width: 100%;">
+                                <h3 title="${rawTitle}" style="font-size:1.15rem; margin-bottom:2px; display: flex; align-items: center; max-width: 100%; overflow: hidden;">${titleHTML}</h3>
+                                <p style="font-size: 0.95rem; color: var(--text-primary); margin-top: 5px; font-weight: 500; display:flex; align-items:center;">${cardSubtitle}</p>
+                                <div class="course-extra-info" style="justify-content: space-between; margin-top: 8px;">
+                                    <div class="course-faculty" style="font-size:0.85rem;">${course.facultyName || 'N/A Faculty'}</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-secondary);">${formattedDate}</div>
+                                </div>
+                                <p class="course-meta" style="color: #22c55e; margin-top: 8px; font-weight: bold; font-size:0.9rem;">${timeRemainingHrs} hrs left in this course</p>
                             </div>
-                            <button class="primary-btn history-continue-btn" data-course="${course.id}" data-subfolder="${h.subfolder || ''}" style="margin-top: auto;">Resume</button>
+                            <div class="course-progress-container" style="margin-top: 12px; margin-bottom: 12px;">
+                                <div class="course-progress-bar"><div class="course-progress-fill" style="width: ${progress.percentage}%"></div></div>
+                                <div class="course-progress-text" style="font-size:0.85rem;">${progress.completed} / ${progress.total || course.videoCount || 0} lectures</div>
+                            </div>
+                            <button class="primary-btn history-continue-btn" data-course="${course.id}" data-lecture="${h.lectureId}" data-subfolder="${h.subfolder || ''}" style="margin-top: auto; font-size:1rem; padding:12px;">Resume</button>
                         </div>
                     `;
                     continueGrid.appendChild(card);
@@ -5105,7 +5189,7 @@
                 let hierarchyText = course.title;
                 
                 if (group.subfolder) {
-                    hierarchyText += ` &raquo; ${group.subfolder.split('/').pop()}`;
+                    hierarchyText += ` &raquo; ${getSubfolderDisplayName(course, group.subfolder)}`;
                     if (course.subCourseData && course.subCourseData[group.subfolder] && course.subCourseData[group.subfolder].thumbnail) {
                         thumb = course.subCourseData[group.subfolder].thumbnail;
                     }
@@ -5135,7 +5219,7 @@
             
             const course = courses.find(c => c.id === courseId);
             const titleEl = document.getElementById('doubts-detail-title');
-            titleEl.innerHTML = course ? course.title + (subfolder ? ` &raquo; ${subfolder.split('/').pop()}` : '') : 'Doubts';
+            titleEl.innerHTML = course ? course.title + (subfolder ? ` &raquo; ${getSubfolderDisplayName(course, subfolder)}` : '') : 'Doubts';
             
             const grid = document.getElementById('doubts-specific-grid');
             grid.innerHTML = '';
@@ -5206,10 +5290,15 @@
                 const btn = e.target.closest('.history-continue-btn');
                 const courseId = parseInt(btn.dataset.course);
                 const subfolder = btn.dataset.subfolder;
-                const viewEl = document.getElementById('subcourse-view');
-                viewEl.dataset.origin = 'continue-view';
-                viewEl.dataset.resumePath = subfolder || '';
-                renderSubcourseView(courseId, subfolder || '');
+                const lectureId = btn.dataset.lecture;
+                if (lectureId && lectureId !== "undefined") {
+                    playLectureFromAnywhere(courseId, lectureId, 'continue-view', subfolder || null);
+                } else {
+                    const viewEl = document.getElementById('subcourse-view');
+                    viewEl.dataset.origin = 'continue-view';
+                    viewEl.dataset.resumePath = subfolder || '';
+                    renderSubcourseView(courseId, subfolder || '');
+                }
             }
             if (e.target.closest('#clear-history-btn')) {
                 if (confirm('Are you sure you want to clear your entire watch history?')) {
@@ -5436,6 +5525,14 @@
                 sortSelect.addEventListener('change', () => {
                     localStorage.setItem('courseSortPref', sortSelect.value);
                     renderCourseGrid();
+                });
+            }
+            
+            const continueSortSelect = document.getElementById('continue-sort-select');
+            if (continueSortSelect) {
+                continueSortSelect.addEventListener('change', () => {
+                    localStorage.setItem('continueSortPref', continueSortSelect.value);
+                    renderContinueView();
                 });
             }
             
