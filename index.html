@@ -3915,7 +3915,8 @@
                 if (showRealTimeLeft) {
                     videoDurationEl.textContent = "-" + formatTime(realTimeLeft);
                 } else {
-                    videoDurationEl.textContent = formatTime(videoPlayer.duration);
+                    const standardTimeLeft = videoPlayer.duration - videoPlayer.currentTime;
+                    videoDurationEl.textContent = "-" + formatTime(standardTimeLeft);
                 }
                 
                 const endTimeDisplay = document.getElementById('estimated-end-time');
