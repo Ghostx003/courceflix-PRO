@@ -762,6 +762,11 @@
     </div>
 
     <div id="player-view" class="view">
+        <div id="pdf-drop-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; border: 4px dashed var(--accent-primary); color: white; opacity: 0; pointer-events: none; transition: opacity 0.2s ease;">
+            <i class="fas fa-file-pdf" style="font-size: 5rem; color: var(--accent-primary); margin-bottom: 20px;"></i>
+            <h2 style="font-size: 2.5rem; margin-bottom: 10px;">Drop PDF Here</h2>
+            <p style="font-size: 1.2rem; color: var(--text-secondary);">Add as Lecture Notes or DPP</p>
+        </div>
         <div id="lecture-menu">
             <div class="menu-header">
                 <div class="menu-header-top">
@@ -803,13 +808,22 @@
                             <input type="range" class="timeline" value="0" step="0.1">
                             <div id="bookmarks-container"></div>
                         </div>
-                        <div class="controls">
+                        <div class="controls" style="position: relative;">
                             <div class="left-controls">
                                 <button class="control-btn" id="play-pause-btn"><i class="fas fa-play"></i></button>
                                 <div class="time-display"><span id="current-time">0:00</span> / <span id="video-duration">0:00</span></div>
                             </div>
-                            <div class="right-controls">
-                                <button class="control-btn" id="speed-btn">1x</button>
+                            <div id="estimated-end-time-container" style="position: absolute; left: 50%; transform: translateX(-50%); height: 100%; top: 0; padding: 0 50px; cursor: default; display: flex; align-items: center; z-index: 10;">
+                                <div id="estimated-end-time" style="font-size: 0.75rem; color: #a5d6a7; opacity: 0; transition: opacity 0.3s; pointer-events: none;"></div>
+                            </div>
+                            <div class="right-controls" style="position: relative; display: flex; align-items: center;">
+                                <div id="custom-speed-popover" class="hidden" style="position: absolute; bottom: 100%; right: 0; margin-bottom: 10px; padding: 8px; border-radius: 8px; box-shadow: var(--shadow); z-index: 100; background: var(--bg-secondary); border: 1px solid var(--border-primary); display: flex; align-items: center; gap: 8px;">
+                                    <input type="number" id="custom-speed-input" step="0.1" min="0.1" max="5.0" style="width: 60px; padding: 4px; text-align: center; border-radius: 4px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-secondary); outline: none;">
+                                    <span style="color: var(--text-secondary); font-size: 0.85rem; margin-left: -4px;">x</span>
+                                    <button id="apply-custom-speed" style="padding: 4px 10px; border-radius: 4px; font-size: 0.85rem; background: var(--accent-primary); color: var(--text-on-accent); border: none; cursor: pointer; font-weight: 600;">Set</button>
+                                </div>
+                                <button class="control-btn" id="speed-btn" style="margin-right: 0;">1x</button>
+                                <button class="control-btn" id="custom-speed-btn" title="Custom Speed" style="margin-right: 8px;"><i class="fas fa-sliders-h" style="font-size: 0.9rem;"></i></button>
                                 <button class="control-btn" id="fullscreen-btn"><i class="fas fa-expand"></i></button>
                             </div>
                         </div>
@@ -954,6 +968,7 @@
         let lastView = 'dashboard-view';
         let activeFileUrl = null;
         let activeViewerFileType = null;
+        let activeViewerLectureId = null;
         let isResizing = false;
         let userInteracted = false;
 
@@ -2375,8 +2390,8 @@
                     if(timeToSet) videoPlayer.currentTime = timeToSet;
                     
                     // Apply saved playback speed
-                    videoPlayer.playbackRate = speeds[currentSpeedIndex];
-                    speedBtn.textContent = `${speeds[currentSpeedIndex]}x`;
+                    videoPlayer.playbackRate = window.activePlaybackRate || speeds[currentSpeedIndex];
+                    speedBtn.textContent = videoPlayer.playbackRate + 'x';
 
                     unmuteBtn.classList.add('hidden');
                     videoPlayer.muted = false;
@@ -2498,7 +2513,7 @@
 
         async function showMediaViewer(fileHandle, fileType, fileName, lectureProgress) {
             try {
-                let file = fileHandle instanceof File ? fileHandle : await fileHandle.getFile();
+                let file = (fileHandle.getFile && typeof fileHandle.getFile === 'function') ? await fileHandle.getFile() : fileHandle;
                 if (activeFileUrl) URL.revokeObjectURL(activeFileUrl);
 
                 let blobToView = file; 
@@ -2525,6 +2540,7 @@
                     mediaViewerFrame.src = activeFileUrl;
                     viewerTitle.textContent = fileName || file.name;
                     activeViewerFileType = fileType.toLowerCase();
+                    activeViewerLectureId = lectureProgress ? lectureProgress.lectureId : null;
                     updateFileSwitcher(lectureProgress, activeViewerFileType);
                     const preferredWidth = localStorage.getItem('viewerWidth') || '500px';
                     playerView.style.setProperty('--viewer-width', preferredWidth);
@@ -2585,6 +2601,7 @@
             }
             mediaViewerFrame.removeAttribute('src'); mediaViewerFrame.srcdoc = '';
             activeViewerFileType = null;
+            activeViewerLectureId = null;
             playerView.style.setProperty('--viewer-width', '0px');
             updateMediaViewerToggleButton();
         }
@@ -3051,12 +3068,12 @@
                 addAssignmentInput.click();
             } else if (e.target.closest('.view-pdf-btn')) {
                 if (lectureProgress.pdfHandle) {
-                    if (activeViewerFileType === 'pdf' && !mediaViewer.classList.contains('hidden')) hideMediaViewer();
+                    if (activeViewerFileType === 'pdf' && activeViewerLectureId === lectureId && !mediaViewer.classList.contains('hidden')) hideMediaViewer();
                     else showMediaViewer(lectureProgress.pdfHandle, 'PDF', lectureProgress.pdfName, lectureProgress);
                 }
             } else if (e.target.closest('.view-assignment-btn')) {
                 if (lectureProgress.assignmentHandle) {
-                    if (activeViewerFileType === 'assignment' && !mediaViewer.classList.contains('hidden')) hideMediaViewer();
+                    if (activeViewerFileType === 'assignment' && activeViewerLectureId === lectureId && !mediaViewer.classList.contains('hidden')) hideMediaViewer();
                     else showMediaViewer(lectureProgress.assignmentHandle, 'Assignment', lectureProgress.assignmentName, lectureProgress);
                 }
             } else if (e.target.closest('.status-btn')) {
@@ -3240,11 +3257,11 @@
                 const lectureId = currentLectureLi.dataset.lectureId;
                 const lectureProgress = getLectureProgress(currentCourse.id, lectureId);
                 if (fileType === 'pdf') {
-                    delete lectureProgress.pdfHandle;
-                    delete lectureProgress.pdfName;
+                    lectureProgress.pdfHandle = null;
+                    lectureProgress.pdfName = null;
                 } else if (fileType === 'assignment') {
-                    delete lectureProgress.assignmentHandle;
-                    delete lectureProgress.assignmentName;
+                    lectureProgress.assignmentHandle = null;
+                    lectureProgress.assignmentName = null;
                 }
                 await saveLectureProgress(lectureProgress);
                 hideMediaViewer();
@@ -3876,27 +3893,192 @@
         videoPlayer.addEventListener('pause', () => playPauseBtn.innerHTML = `<i class="fas fa-play"></i>`);
         videoWrapper.addEventListener('click', (e) => { if (e.target.closest('.video-controls-container') || e.target.closest('#unmute-btn') || e.target.closest('.bookmark-dot')) return; if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; } clickTimer = setTimeout(() => { if (!e.target.closest('#media-viewer')) playPauseBtn.click(); }, 250); });
         videoWrapper.addEventListener('dblclick', (e) => { if (e.target.closest('.video-controls-container') || e.target.closest('#media-viewer')) return; clearTimeout(clickTimer); clickTimer = null; const r=videoWrapper.getBoundingClientRect(),c=e.clientX-r.left;if(c<r.width/2){videoPlayer.currentTime-=10;showSeekIcon(leftSeekOverlay)}else{videoPlayer.currentTime+=10;showSeekIcon(rightSeekOverlay)}});
+        videoWrapper.addEventListener('wheel', (e) => {
+            if (e.target.closest('.video-controls-container') || e.target.closest('#media-viewer')) return;
+            e.preventDefault();
+            if (e.deltaY < 0) {
+                videoPlayer.currentTime += 10;
+                showSeekIcon(rightSeekOverlay);
+            } else if (e.deltaY > 0) {
+                videoPlayer.currentTime -= 10;
+                showSeekIcon(leftSeekOverlay);
+            }
+        });
+        let showRealTimeLeft = true;
+        const videoDurationEl = document.getElementById('video-duration');
+        videoDurationEl.style.cursor = 'pointer';
+        videoDurationEl.title = "Toggle time format";
+        
+        function updateTimeDisplay() {
+            if (!isNaN(videoPlayer.duration)) {
+                const realTimeLeft = (videoPlayer.duration - videoPlayer.currentTime) / videoPlayer.playbackRate;
+                if (showRealTimeLeft) {
+                    videoDurationEl.textContent = "-" + formatTime(realTimeLeft);
+                } else {
+                    videoDurationEl.textContent = formatTime(videoPlayer.duration);
+                }
+                
+                const endTimeDisplay = document.getElementById('estimated-end-time');
+                if (endTimeDisplay) {
+                    const now = new Date();
+                    const endTime = new Date(now.getTime() + (realTimeLeft * 1000));
+                    let hours = endTime.getHours();
+                    const minutes = endTime.getMinutes().toString().padStart(2, '0');
+                    const ampm = hours >= 12 ? 'PM' : 'AM';
+                    hours = hours % 12 || 12;
+                    endTimeDisplay.textContent = `Ends at ${hours}:${minutes} ${ampm}`;
+                }
+            }
+        }
+        
+        setInterval(() => {
+            if (videoPlayer.paused) updateTimeDisplay();
+        }, 1000);
+        
+        videoDurationEl.addEventListener('click', () => {
+            showRealTimeLeft = !showRealTimeLeft;
+            updateTimeDisplay();
+        });
+
+        const endTimeContainer = document.getElementById('estimated-end-time-container');
+        let endTimeHoverTimeout;
+        if (endTimeContainer) {
+            endTimeContainer.addEventListener('mouseenter', () => {
+                const displayEl = document.getElementById('estimated-end-time');
+                if (displayEl) {
+                    displayEl.style.opacity = '0.9';
+                    clearTimeout(endTimeHoverTimeout);
+                    endTimeHoverTimeout = setTimeout(() => {
+                        displayEl.style.opacity = '0';
+                    }, 10000);
+                }
+            });
+        }
+
+        window.activePlaybackRate = window.activePlaybackRate || 1.6;
+        videoPlayer.addEventListener('ratechange', () => {
+            window.activePlaybackRate = videoPlayer.playbackRate;
+            speedBtn.textContent = window.activePlaybackRate + 'x';
+            updateTimeDisplay();
+        });
+
         videoPlayer.addEventListener('timeupdate', () => { 
             const currentTime = videoPlayer.currentTime;
             document.getElementById('current-time').textContent = formatTime(currentTime); 
             if (!isNaN(videoPlayer.duration)) { 
-                const duration = videoPlayer.duration;
+                updateTimeDisplay();
                 timeline.value = currentTime; 
-                const p = (currentTime / duration) * 100; 
+                const p = (currentTime / videoPlayer.duration) * 100; 
                 timeline.style.background = `linear-gradient(to right, var(--accent-primary) ${p}%, rgba(255, 255, 255, 0.3) ${p}%)`;
             } 
         });
-        videoPlayer.addEventListener('loadedmetadata', () => { document.getElementById('video-duration').textContent = formatTime(videoPlayer.duration); timeline.max = videoPlayer.duration; });
+        videoPlayer.addEventListener('loadedmetadata', () => { 
+            updateTimeDisplay();
+            timeline.max = videoPlayer.duration; 
+        });
         timeline.addEventListener('input', (e) => videoPlayer.currentTime = e.target.value);
         fullscreenBtn.addEventListener('click', () => { if (!document.fullscreenElement) playerView.requestFullscreen().catch(err => showToast(`Error: ${err.message}`, true)); else document.exitFullscreen(); });
         
         const speeds = [1, 1.25, 1.5, 1.6, 1.75, 1.85, 2, 2.25, 2.5, 3]; let currentSpeedIndex = 3; // Default 1.6x
-        videoPlayer.playbackRate = speeds[currentSpeedIndex];
-        speedBtn.textContent = `${speeds[currentSpeedIndex]}x`;
+        window.activePlaybackRate = window.activePlaybackRate || speeds[currentSpeedIndex];
+        videoPlayer.playbackRate = window.activePlaybackRate;
+        speedBtn.textContent = `${window.activePlaybackRate}x`;
         speedBtn.addEventListener('click', () => {
             currentSpeedIndex = (currentSpeedIndex + 1) % speeds.length;
-            videoPlayer.playbackRate = speeds[currentSpeedIndex];
-            speedBtn.textContent = `${speeds[currentSpeedIndex]}x`;
+            window.activePlaybackRate = speeds[currentSpeedIndex];
+            videoPlayer.playbackRate = window.activePlaybackRate;
+        });
+
+        const customSpeedBtn = document.getElementById('custom-speed-btn');
+        const customSpeedPopover = document.getElementById('custom-speed-popover');
+        const customSpeedInput = document.getElementById('custom-speed-input');
+        const applyCustomSpeedBtn = document.getElementById('apply-custom-speed');
+
+        customSpeedBtn.addEventListener('click', () => {
+            customSpeedPopover.classList.toggle('hidden');
+            if (!customSpeedPopover.classList.contains('hidden')) {
+                customSpeedInput.value = window.activePlaybackRate || 1.6;
+                customSpeedInput.focus();
+            }
+        });
+
+        applyCustomSpeedBtn.addEventListener('click', () => {
+            let newSpeed = parseFloat(customSpeedInput.value);
+            if (newSpeed && newSpeed >= 0.1 && newSpeed <= 5.0) {
+                window.activePlaybackRate = newSpeed;
+                videoPlayer.playbackRate = newSpeed;
+            }
+            customSpeedPopover.classList.add('hidden');
+        });
+        
+        customSpeedInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') applyCustomSpeedBtn.click();
+        });
+        const pdfDropOverlay = document.getElementById('pdf-drop-overlay');
+        let dragCounter = 0;
+
+        playerView.addEventListener('dragenter', (e) => {
+            e.preventDefault();
+            dragCounter++;
+            pdfDropOverlay.style.opacity = '1';
+            pdfDropOverlay.style.pointerEvents = 'auto';
+        });
+        playerView.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+        playerView.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dragCounter--;
+            if (dragCounter === 0) {
+                pdfDropOverlay.style.opacity = '0';
+                pdfDropOverlay.style.pointerEvents = 'none';
+            }
+        });
+        playerView.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            dragCounter = 0;
+            pdfDropOverlay.style.opacity = '0';
+            pdfDropOverlay.style.pointerEvents = 'none';
+            
+            if (!currentCourse || !currentLectureLi) {
+                showToast("Please open a lecture first before dropping files.", true);
+                return;
+            }
+            
+            const lectureId = currentLectureLi.dataset.lectureId;
+            const files = e.dataTransfer.files;
+            if (!files || files.length === 0) return;
+            
+            const file = files[0];
+            if (!file.name.toLowerCase().endsWith('.pdf')) {
+                showToast("Only PDF files are allowed.", true);
+                return;
+            }
+            
+            const progressData = getLectureProgress(currentCourse.id, lectureId) || {};
+            
+            if (!progressData.pdfHandle) {
+                await saveLectureProgress({ ...progressData, pdfHandle: file, pdfName: file.name, courseId: currentCourse.id, lectureId: lectureId });
+                showToast("PDF added as Lecture Notes!");
+            } else {
+                await saveLectureProgress({ ...progressData, assignmentHandle: file, assignmentName: file.name, assignmentType: file.type, courseId: currentCourse.id, lectureId: lectureId });
+                
+                const dpp = {
+                    courseId: currentCourse.id,
+                    folderName: currentSubfolder || 'Uncategorized',
+                    fileName: file.name.replace(/\.[^/.]+$/, ""),
+                    fileHandle: file,
+                    completed: false,
+                    starred: false,
+                    status: null
+                };
+                await new Promise(r => getStore(DPP_STORE, 'readwrite').add(dpp).onsuccess = r);
+                if (typeof syncCourseflixSubjects === 'function') syncCourseflixSubjects();
+                
+                showToast("PDF added as DPP / Assignment!");
+            }
+            
+            renderChapterList(currentCourse.chapters, lectureId);
         });
         
         document.addEventListener('keydown', (e) => { 
@@ -3926,6 +4108,20 @@
             let shouldPreventDefault = true;
             switch(e.key) { 
                 case ' ': if (view.id === 'player-view') playPauseBtn.click(); break;
+                case 'c': 
+                    if (view.id === 'player-view') {
+                        let newSpeed = videoPlayer.playbackRate + 0.1;
+                        if (newSpeed > 5.0) newSpeed = 5.0;
+                        videoPlayer.playbackRate = parseFloat(newSpeed.toFixed(2));
+                    }
+                    break;
+                case 'x':
+                    if (view.id === 'player-view') {
+                        let newSpeed = videoPlayer.playbackRate - 0.1;
+                        if (newSpeed < 0.1) newSpeed = 0.1;
+                        videoPlayer.playbackRate = parseFloat(newSpeed.toFixed(2));
+                    }
+                    break;
                 case 's': if (view.id === 'player-view' && currentCourse && currentLectureLi) captureDoubt(); break;
                 case 'n': 
                     if (view.id === 'player-view' && currentLectureLi) {
@@ -3971,15 +4167,31 @@
             if (shouldPreventDefault) e.preventDefault();
         });
         
-        mediaResizeHandle.addEventListener('mousedown', (e) => { e.preventDefault(); isResizing = true; document.body.style.cursor = 'ew-resize'; playerView.style.userSelect = 'none'; });
+        mediaResizeHandle.addEventListener('mousedown', (e) => { 
+            e.preventDefault(); 
+            isResizing = true; 
+            document.body.style.cursor = 'ew-resize'; 
+            playerView.style.userSelect = 'none'; 
+            mediaViewer.style.pointerEvents = 'none';
+            document.getElementById('video-wrapper').style.pointerEvents = 'none';
+        });
+        let resizeTicking = false;
         document.addEventListener('mousemove', (e) => {
-            if (!isResizing) return; e.preventDefault(); const totalWidth = playerView.offsetWidth;
-            const menuWidth = lectureMenu.classList.contains('hidden') ? 0 : lectureMenu.offsetWidth;
-            let newViewerWidth = totalWidth - e.clientX;
-            newViewerWidth = Math.max(300, newViewerWidth);
-            newViewerWidth = Math.min(totalWidth - 300 - menuWidth, newViewerWidth);
-            playerView.style.setProperty('--viewer-width', `${newViewerWidth}px`);
-            mediaViewer.style.width = `${newViewerWidth}px`;
+            if (!isResizing) return; 
+            e.preventDefault(); 
+            if (!resizeTicking) {
+                window.requestAnimationFrame(() => {
+                    const totalWidth = playerView.offsetWidth;
+                    const menuWidth = lectureMenu.classList.contains('hidden') ? 0 : lectureMenu.offsetWidth;
+                    let newViewerWidth = totalWidth - e.clientX;
+                    newViewerWidth = Math.max(300, newViewerWidth);
+                    newViewerWidth = Math.min(totalWidth - 300 - menuWidth, newViewerWidth);
+                    playerView.style.setProperty('--viewer-width', `${newViewerWidth}px`);
+                    mediaViewer.style.width = `${newViewerWidth}px`;
+                    resizeTicking = false;
+                });
+                resizeTicking = true;
+            }
         });
         document.addEventListener('mouseup', () => {
             if (isResizing) {
@@ -3987,6 +4199,8 @@
                 isResizing = false;
                 document.body.style.cursor = '';
                 playerView.style.userSelect = '';
+                mediaViewer.style.pointerEvents = '';
+                document.getElementById('video-wrapper').style.pointerEvents = '';
             }
         });
 
@@ -4061,7 +4275,30 @@
             document.getElementById('dpp-detail-container').classList.add('hidden');
             dppCourseGrid.classList.remove('hidden');
 
-            const allDpps = await new Promise(r => getStore(DPP_STORE, 'readonly').getAll().onsuccess = e => r(e.target.result));
+            const allProgress = await new Promise(r => getStore(PROGRESS_STORE, 'readonly').getAll().onsuccess = e => r(e.target.result));
+            let allDpps = await new Promise(r => getStore(DPP_STORE, 'readonly').getAll().onsuccess = e => r(e.target.result));
+            let addedAnyDpp = false;
+            for (const prog of allProgress) {
+                if (prog.assignmentHandle) {
+                    const fName = (prog.assignmentName || "Assignment").replace(/\.[^/.]+$/, "");
+                    if (!allDpps.some(d => d.courseId === prog.courseId && d.fileName === fName)) {
+                        const course = courses.find(c => c.id === prog.courseId);
+                        let folder = 'Uncategorized';
+                        if (course && course.lectures) {
+                            const lec = course.lectures.find(l => l.id === prog.lectureId);
+                            if (lec && lec.chapter) folder = lec.chapter;
+                        }
+                        const dpp = { courseId: prog.courseId, folderName: folder, fileName: fName, fileHandle: prog.assignmentHandle, completed: false, starred: false, status: null };
+                        await new Promise(r => getStore(DPP_STORE, 'readwrite').add(dpp).onsuccess = r);
+                        addedAnyDpp = true;
+                    }
+                }
+            }
+            if (addedAnyDpp) {
+                if (typeof syncCourseflixSubjects === 'function') syncCourseflixSubjects();
+                allDpps = await new Promise(r => getStore(DPP_STORE, 'readonly').getAll().onsuccess = e => r(e.target.result));
+            }
+
             const courseIdsWithDpps = [...new Set(allDpps.map(dpp => dpp.courseId))];
             const coursesWithDpps = courses.filter(c => courseIdsWithDpps.includes(c.id));
 
@@ -4382,6 +4619,20 @@
                 e.stopPropagation();
                 if (confirm(`Are you sure you want to delete the DPP "${dpp.fileName}"?`)) {
                     await new Promise(r => getStore(DPP_STORE, 'readwrite').delete(dppId).onsuccess = r);
+                    
+                    const allProgress = await new Promise(r => getStore(PROGRESS_STORE, 'readonly').getAll().onsuccess = e => r(e.target.result));
+                    for (const prog of allProgress) {
+                        if (prog.assignmentHandle && prog.courseId === dpp.courseId) {
+                            const progFileName = (prog.assignmentName || "Assignment").replace(/\.[^/.]+$/, "");
+                            if (progFileName === dpp.fileName) {
+                                prog.assignmentHandle = null;
+                                prog.assignmentName = null;
+                                prog.assignmentType = null;
+                                await saveLectureProgress(prog);
+                            }
+                        }
+                    }
+                    
                     if (typeof syncCourseflixSubjects === 'function') syncCourseflixSubjects();
                     const courseId = parseInt(document.getElementById('dpp-detail-container').dataset.courseId);
                     await renderDppDetailView(courseId);
