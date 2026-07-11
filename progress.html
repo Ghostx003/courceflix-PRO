@@ -985,9 +985,7 @@
                         <select id="filter-subject" class="input-main px-4 py-2 rounded-lg appearance-none">
                             <option value="all">All Subjects</option>
                         </select>
-                        <button id="manage-doubt-subjects-btn" title="Manage Subjects" class="btn-secondary p-2 rounded-lg">
-                            <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.438.995s.145.755.438.995l1.003.827c.48.398.668 1.03.26 1.431l-1.296 2.247a1.125 1.125 0 0 1-1.37.49l-1.217-.456c-.355-.133-.75-.072-1.075.124a6.57 6.57 0 0 1-.22.127c-.332.183-.582.495-.645.87l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a6.52 6.52 0 0 1-.22-.127c-.324-.196-.72-.257-1.075-.124l-1.217.456a1.125 1.125 0 0 1-1.37-.49l-1.296-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.437-.995s-.145-.755-.437-.995l-1.004-.827a1.125 1.125 0 0 1-.26-1.431l1.296-2.247a1.125 1.125 0 0 1 1.37-.49l1.217.456c.355.133.75.072 1.075-.124.072-.044.146-.087.22-.127.332-.183.582-.495.645-.87l.213-1.281Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
-                        </button>
+
                     </div>
                 </div>
 
@@ -1085,15 +1083,7 @@
             </div>
         </div>
     </div>
-    <div id="manage-doubt-subjects-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50 p-4">
-        <div class="modal-content">
-            <div class="flex justify-between items-center mb-4">
-                <h4 class="text-xl font-bold text-main">Manage Subjects</h4>
-                <button id="close-doubt-subjects-modal" class="p-1 rounded-full hover:bg-main">&times;</button>
-            </div>
-            <div id="doubt-subjects-list" class="space-y-2 max-h-96 overflow-y-auto"></div>
-        </div>
-    </div>
+
     
     <div id="edit-subjects-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50 p-4"><div class="bg-main rounded-2xl shadow-xl p-6 w-full max-w-md"><h4 class="text-xl font-bold mb-5 text-main">Edit Subjects for Today</h4><div id="subjects-checklist" class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6 max-h-64 overflow-y-auto p-1"></div><div class="flex justify-end space-x-3"><button id="cancel-edit-subjects" class="px-5 py-2 btn-secondary rounded-lg transition-colors font-semibold">Cancel</button><button id="confirm-edit-subjects" class="px-5 py-2 btn-primary rounded-lg transition-colors font-semibold">Save Changes</button></div></div></div>
     <div id="edit-hours-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50 p-4"><div class="bg-main rounded-2xl shadow-xl p-6 w-full max-w-xs"><h4 class="text-xl font-bold mb-2 text-main">Set Hours for</h4><p id="edit-hours-subject-name" class="text-md mb-4 text-subtle"></p><input type="number" id="hours-input" min="1" class="w-full p-2 border rounded-lg mb-4 text-center text-lg input-main"><div class="flex justify-end space-x-3"><button id="cancel-edit-hours" class="px-5 py-2 btn-secondary rounded-lg transition-colors font-semibold">Cancel</button><button id="confirm-edit-hours" class="px-5 py-2 btn-primary rounded-lg transition-colors font-semibold">Save</button></div></div></div>
@@ -3590,10 +3580,7 @@
             const editorsWrapper = document.getElementById('editors-wrapper');
             const addEditorBtn = document.getElementById('add-editor-btn');
             const imageUploadInput = document.getElementById('image-upload-input');
-            const manageSubjectsBtn = document.getElementById('manage-doubt-subjects-btn');
-            const manageSubjectsModal = document.getElementById('manage-doubt-subjects-modal');
-            const closeSubjectsModalBtn = document.getElementById('close-doubt-subjects-modal');
-            const subjectsList = document.getElementById('doubt-subjects-list');
+
             
             // --- DATA HELPERS ---
             const saveDoubtSubjects = () => localStorage.setItem('doubtsSubjects', JSON.stringify(doubtSubjects));
@@ -3857,22 +3844,7 @@
                     }
                 }
             });
-            manageSubjectsBtn.addEventListener('click', () => { renderDoubtSubjectsManager(); manageSubjectsModal.classList.remove('hidden'); });
-            closeSubjectsModalBtn.addEventListener('click', () => manageSubjectsModal.classList.add('hidden'));
-            subjectsList.addEventListener('click', (e) => {
-                const deleteBtn = e.target.closest('.delete-subject-btn');
-                if (deleteBtn) {
-                    const subjectToDelete = deleteBtn.dataset.subject;
-                    const doubtsWithSubject = doubts.filter(d => d.subject === subjectToDelete).length;
-                    if (confirm(`This will delete the subject "${subjectToDelete}" and its ${doubtsWithSubject} associated doubt(s). This action cannot be undone. Are you sure?`)) {
-                        doubtSubjects = doubtSubjects.filter(s => s !== subjectToDelete);
-                        const doubtsToDelete = doubts.filter(d => d.subject === subjectToDelete);
-                        doubtsToDelete.forEach(d => deleteDoubtFromIndexedDB(d.id));
-                        doubts = doubts.filter(d => d.subject !== subjectToDelete);
-                        saveDoubtSubjects(); saveDoubts(); renderDoubtSubjectsManager(); populateFilterDropdown(); renderDoubtDashboard();
-                    }
-                }
-            });
+
 
             // --- INITIALIZATION ---
             populateFilterDropdown();
