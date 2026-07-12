@@ -8,6 +8,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
+        .thumbnail-placeholder .hide-profile-course-btn {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s 0s, background-color 0.2s;
+        }
+        .thumbnail-placeholder:hover .hide-profile-course-btn {
+            opacity: 1;
+            pointer-events: auto;
+            transition: opacity 0.2s 3s, background-color 0.2s;
+        }
         /* --- THEME & ACCENT COLOR VARIABLES --- */
         html { background-color: #000000; overflow: hidden; }
         :root {
@@ -67,18 +77,18 @@
         
         /* --- NAVBAR --- */
         nav {
-            display: flex; align-items: center; padding: 1rem 2.5rem;
+            display: flex; align-items: center; padding: 0.8rem 1.5rem;
             background-color: var(--bg-secondary); border-bottom: 1px solid var(--border-primary); 
-            flex-shrink: 0; position: relative; z-index: 9999; gap: 1rem;
+            flex-shrink: 0; position: relative; z-index: 9999; gap: 0.8rem;
             overflow-x: auto; scrollbar-width: none; /* Firefox */
         }
         nav::-webkit-scrollbar { display: none; } /* Chrome/Safari */
         nav.hidden { display: none; }
-        nav h1 { margin: 0; font-size: 1.5rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
-        .nav-links { margin-right: auto; display: flex; gap: 1rem; white-space: nowrap; }
+        nav h1 { margin: 0; font-size: 1.25rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+        .nav-links { margin-right: auto; display: flex; gap: 0.5rem; white-space: nowrap; }
         .nav-link { 
             color: var(--text-secondary); text-decoration: none; font-weight: 600; font-size: 0.95rem;
-            padding: 8px 12px; border-radius: 8px; transition: background-color 0.2s, color 0.2s;
+            padding: 6px 10px; border-radius: 8px; transition: background-color 0.2s, color 0.2s;
         }
         .nav-link:hover { color: var(--text-primary); background-color: var(--bg-tertiary); }
         .nav-link.active { color: var(--accent-primary); }
@@ -225,6 +235,15 @@
         #upload-lecture-list .lecture-item .file-status i { color: var(--accent-primary); }
         #upload-drop-zones { flex-grow: 1; display: flex; gap: 2rem; padding: 2rem; }
         .drop-zone { flex: 1; border: 3px dashed var(--border-secondary); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: border-color 0.2s, background-color 0.2s; text-align: center; color: var(--text-secondary); }
+        .faculty-stat-item {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border-secondary);
+            border-radius: 8px; padding: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .faculty-stat-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
         .drop-zone.dragover { border-color: var(--accent-primary); background-color: var(--bg-tertiary); }
         .drop-zone i { font-size: 3rem; margin-bottom: 1rem; }
         .drop-zone h4 { margin: 0 0 0.5rem 0; color: var(--text-primary); }
@@ -487,6 +506,163 @@
         .calc-results-panel h3 { margin: 0 0 0.5rem 0; color: var(--text-primary); font-size: 1.2rem; }
         .calc-big-date { font-size: 2rem; color: var(--accent-primary); font-weight: 700; margin-bottom: 0.5rem; }
         .calc-meta-stats { font-size: 0.9rem; color: var(--text-secondary); }
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .search-anim-item {
+            animation: fadeSlideUp 0.3s ease forwards;
+            opacity: 0;
+        }
+        /* --- FACULTY VIEW --- */
+        #faculty-view { flex-direction: column; }
+        .faculty-card {
+            background-color: var(--bg-secondary);
+            border-radius: 0.75rem;
+            border: 1px solid var(--border-primary);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: transform 0.2s, box-shadow 0.2s;
+            padding: 1rem;
+            gap: 1rem;
+            z-index: 1;
+            box-sizing: border-box;
+            min-width: 0;
+            height: auto;
+        }
+        .faculty-card * {
+            box-sizing: border-box;
+        }
+        .faculty-card:hover { 
+            transform: translateY(-4px); 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15); 
+            border-color: var(--accent-primary); 
+        }
+        
+        .faculty-card-banner {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            position: relative;
+            width: 100%;
+        }
+        
+        .faculty-photo {
+            width: 4rem;
+            height: 4rem;
+            flex-shrink: 0;
+            border-radius: 50%;
+            background-color: var(--bg-tertiary);
+            border: 2px solid var(--accent-primary);
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden; /* Only allowed on photo */
+            position: relative;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+        }
+        .faculty-photo img { width: 100%; height: auto; object-fit: cover; }
+        .faculty-photo i { font-size: 1.5rem; color: var(--text-secondary); opacity: 0.5; }
+        .faculty-card:hover .faculty-photo { transform: scale(1.05); }
+        
+        .edit-photo-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; border-radius: 50%;
+        }
+        .faculty-photo:hover .edit-photo-overlay { opacity: 1; }
+
+        .faculty-card-header-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-width: 0;
+            flex-grow: 1;
+        }
+        
+        .faculty-name { 
+            font-size: 1.15rem; 
+            font-weight: 800; 
+            margin: 0; 
+            color: var(--text-primary); 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            width: 100%;
+        }
+        
+        .faculty-rating-stars { 
+            display: flex; 
+            justify-content: flex-start; 
+            gap: 0.25rem; 
+            font-size: 0.95rem; 
+            margin-top: 0.25rem; 
+        }
+        .faculty-rating-stars i { color: var(--border-secondary); cursor: pointer; transition: transform 0.2s; }
+        .faculty-rating-stars i.fas { color: #f59e0b; }
+        .faculty-rating-stars i:hover { transform: scale(1.2); }
+        
+        .faculty-stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); 
+            gap: 0.5rem; 
+            width: 100%;
+        }
+        .faculty-stat-item { 
+            background: rgba(0,0,0,0.03); padding: 0.75rem 0.5rem; border-radius: 0.5rem; 
+            border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; text-align: center;
+            transition: background-color 0.2s;
+            box-sizing: border-box;
+        }
+        html[data-theme="dark"] .faculty-stat-item, html[data-theme="pure-black"] .faculty-stat-item { background: rgba(255,255,255,0.03); }
+        .faculty-stat-item:hover { 
+            background-color: var(--bg-tertiary);
+            border-color: var(--accent-primary);
+        }
+        .faculty-stat-val { font-size: 1rem; font-weight: 800; color: var(--accent-primary); margin-bottom: 0.25rem; }
+        .faculty-stat-label { font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; white-space: normal; line-height: 1.2; text-align: center; width: 100%; }
+        
+        .view-faculty-profile-btn { 
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary, var(--accent-primary))); 
+            color: white; border: none; border-radius: 0.5rem; padding: 0.75rem; font-weight: 700; cursor: pointer; 
+            transition: transform 0.2s, filter 0.2s; text-align: center; font-size: 0.9rem;
+            text-transform: uppercase; width: 100%; box-shadow: 0 2px 5px var(--accent-primary_translucent);
+            margin-top: auto;
+            box-sizing: border-box;
+        }
+        .view-faculty-profile-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+        .view-faculty-profile-btn:active { transform: translateY(1px); }
+
+        .faculty-card .hide-faculty-btn {
+            position: absolute; top: 0.5rem; right: 0.5rem;
+            background: var(--accent-danger); color: white;
+            border: none; border-radius: 50%; width: 1.5rem; height: 1.5rem;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.2s, background-color 0.2s; z-index: 10; font-size: 0.75rem;
+        }
+        .faculty-card .hide-faculty-btn:hover { background: #b91c1c; }
+        .faculty-card:hover .hide-faculty-btn { opacity: 1; }
+
+        .pie-legend-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--bg-tertiary); border-radius: 8px; font-size: 0.9rem; font-weight: 600; border: 1px solid var(--border-secondary); }
+        .pie-legend-color { width: 14px; height: 14px; border-radius: 50%; margin-right: 12px; flex-shrink: 0; box-shadow: 0 0 4px rgba(0,0,0,0.2); }
+        
+        #faculty-aside {
+            position: absolute; right: 0; top: 0; bottom: 0; width: 340px; max-width: 90%; 
+            padding: 24px; border-left: 1px solid var(--border-primary); 
+            background: var(--bg-secondary); display: flex; flex-direction: column; 
+            align-items: center; justify-content: flex-start; z-index: 100; 
+            transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            box-shadow: -4px 0 15px rgba(0,0,0,0.5); overflow-y: auto;
+        }
+        #faculty-aside.open {
+            transform: translateX(0);
+        }
+
     </style>
 </head>
 <body>
@@ -503,6 +679,7 @@
             <a href="#" class="nav-link" data-view="doubts-view">Doubts</a>
             <a href="#" class="nav-link" data-view="continue-view">Continue</a>
             <a href="#" class="nav-link" data-view="history-view">History</a>
+            <a href="#" class="nav-link" data-view="faculty-view"><i class="fas fa-chalkboard-teacher" style="margin-right: 4px;"></i> Faculty</a>
             <a href="plan.html" class="nav-link" style="color: var(--accent-secondary);">Planner <i class="fas fa-external-link-alt" style="font-size: 0.8em; margin-left: 4px;"></i></a>
             <a href="progress.html#dashboard" class="nav-link" style="color: var(--accent-secondary);">Performance <i class="fas fa-external-link-alt" style="font-size: 0.8em; margin-left: 4px;"></i></a>
             <button id="theme-toggle-btn" class="nav-link" style="background: none; border: none; cursor: pointer; display: flex; align-items: center; padding: 8px;" title="Toggle Pure Black Theme"><i class="fas fa-moon"></i></button>
@@ -512,7 +689,11 @@
     </nav>
 
     <div id="dashboard-view-el" class="view active">
-        <div style="padding: 10px 24px; display: flex; justify-content: flex-end; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-primary); background: var(--bg-primary);">
+        <div style="padding: 10px 24px; display: flex; justify-content: flex-end; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-primary); background: var(--bg-primary); flex-wrap: wrap;">
+            <div id="search-bar-container" style="display: flex; align-items: center; background: var(--bg-tertiary); border: 1px solid var(--border-secondary); border-radius: 20px; padding: 6px 14px; width: 220px; transition: all 0.3s ease; margin-right: auto; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <i class="fas fa-search" style="color: var(--text-secondary); margin-right: 8px; font-size: 0.9rem;"></i>
+                <input type="text" id="global-search-input" placeholder="" style="border: none; background: transparent; color: var(--text-primary); font-family: inherit; font-size: 0.85rem; width: 100%; outline: none;" autocomplete="off">
+            </div>
             <label for="course-sort-select" style="font-size: 0.9rem; color: var(--text-secondary); font-weight: 600;">Sort by:</label>
             <select id="course-sort-select" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-secondary); background: var(--bg-tertiary); color: var(--text-primary); font-family: inherit; font-size: 0.85rem; font-weight: 500; cursor: pointer;">
                 <option value="custom">Custom (Drag & Drop)</option>
@@ -768,6 +949,59 @@
         </div>
     </div>
 
+    <div id="search-results-view" class="view" style="overflow-y: auto;">
+        <div style="position: sticky; top: 0; z-index: 20; background: var(--bg-primary); border-bottom: 1px solid var(--border-primary); padding-bottom: 12px; display: flex; flex-direction: column; align-items: center; width: 100%;">
+            <div class="view-header" style="justify-content: center; padding: 0px 24px 12px 24px; border-bottom: none; background: transparent; width: 100%; position: relative; gap: 16px;">
+                <button class="icon-btn" id="back-from-search-btn" title="Back" style="background: var(--bg-tertiary); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex-shrink: 0;"><i class="fas fa-arrow-left"></i></button>
+                <div id="search-results-bar-container" style="display: flex; align-items: center; background: var(--bg-tertiary); border: 2px solid var(--accent-primary); border-radius: 12px; padding: 8px 20px; width: 100%; max-width: 600px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.15);">
+                    <i class="fas fa-search" style="color: var(--accent-primary); margin-right: 12px; font-size: 1.2rem;"></i>
+                    <input type="text" id="search-results-input" placeholder="Search courses, chapters, or videos..." style="border: none; background: transparent; color: var(--text-primary); font-family: inherit; font-size: 1.1rem; width: 100%; outline: none; padding: 4px 0;" autocomplete="off">
+                    <div style="display: flex; gap: 8px; margin-left: 12px; border-left: 1px solid var(--border-secondary); padding-left: 12px;">
+                        <button id="search-mode-partial" class="icon-btn" style="background: var(--accent-primary); color: white; border-radius: 4px; padding: 4px 8px; font-size: 0.9rem;" title="Partial Match (Anywhere)"><i class="fas fa-cubes"></i></button>
+                        <button id="search-mode-exact" class="icon-btn" style="background: transparent; color: var(--text-secondary); border-radius: 4px; padding: 4px 8px; font-size: 0.9rem; border: 1px solid var(--border-secondary);" title="Exact Word & Case Match"><i class="fas fa-font"></i></button>
+                    </div>
+                </div>
+                <button id="search-mode-faculty" class="icon-btn" style="background: var(--bg-tertiary); color: var(--text-secondary); border-radius: 12px; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 2px solid transparent; transition: all 0.2s; flex-shrink: 0;" title="Search Faculty Only"><i class="fas fa-chalkboard-teacher" style="font-size: 1.2rem;"></i></button>
+            </div>
+            
+            <div id="search-jump-bar" style="display: none; align-items: center; justify-content: center; flex-wrap: wrap; gap: 12px; background: transparent; padding: 0 20px;">
+                <span style="color: var(--text-secondary); font-weight: 500; font-size: 0.95rem; margin-right: 8px;"><i class="fas fa-level-down-alt" style="margin-right: 6px;"></i>Jump to:</span>
+                <button id="jump-to-lectures" class="text-btn jump-btn" style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); padding: 6px 14px; border-radius: 20px; color: var(--text-primary); font-size: 0.9rem; transition: all 0.2s; display: none; cursor: pointer;">Lectures</button>
+                <button id="jump-to-chapters" class="text-btn jump-btn" style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); padding: 6px 14px; border-radius: 20px; color: var(--text-primary); font-size: 0.9rem; transition: all 0.2s; display: none; cursor: pointer;">Chapters</button>
+                <button id="jump-to-subjects" class="text-btn jump-btn" style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); padding: 6px 14px; border-radius: 20px; color: var(--text-primary); font-size: 0.9rem; transition: all 0.2s; display: none; cursor: pointer;">Subjects</button>
+            </div>
+        </div>
+        
+        <div style="padding: 24px; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box;">
+            
+            <div id="search-results-lectures-section" style="margin-bottom: 40px; display: none; scroll-margin-top: 140px;">
+                <h2 style="font-size: 1.25rem; margin-bottom: 16px; color: var(--text-secondary); border-bottom: 1px solid var(--border-secondary); padding-bottom: 8px; font-weight: 500;">Matching Lectures</h2>
+                <div id="search-results-lectures-list" style="display: flex; flex-direction: column; gap: 12px;"></div>
+            </div>
+
+            <div id="search-results-chapters-section" style="margin-bottom: 40px; display: none; scroll-margin-top: 140px;">
+                <h2 id="chapter-section-title" style="font-size: 1.25rem; margin-bottom: 16px; color: var(--text-secondary); border-bottom: 1px solid var(--border-secondary); padding-bottom: 8px; font-weight: 500;">Chapters / Topics</h2>
+                <div id="search-results-chapters-grid" class="course-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;"></div>
+            </div>
+
+            <div id="search-results-subjects-section" style="margin-bottom: 40px; display: none; scroll-margin-top: 140px;">
+                <h2 id="subject-section-title" style="font-size: 1.25rem; margin-bottom: 16px; color: var(--text-secondary); border-bottom: 1px solid var(--border-secondary); padding-bottom: 8px; font-weight: 500;">Matching Subjects</h2>
+                <div id="search-results-subjects-grid" class="course-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;"></div>
+            </div>
+            
+            <div id="search-results-faculty-section" style="margin-bottom: 40px; display: none;">
+                <h2 id="faculty-section-title" style="font-size: 1.25rem; margin-bottom: 16px; color: var(--text-secondary); border-bottom: 1px solid var(--border-secondary); padding-bottom: 8px; font-weight: 500;">Other Subjects taught by Faculty</h2>
+                <div id="search-results-faculty-grid" class="course-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;"></div>
+            </div>
+            
+            <div id="search-no-results" style="display: none; text-align: center; padding: 40px; color: var(--text-secondary);">
+                <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 16px; opacity: 0.5;"></i>
+                <h2 style="font-size: 1.5rem; margin-bottom: 8px;">No results found</h2>
+                <p>Try adjusting your search query.</p>
+            </div>
+        </div>
+    </div>
+
     <div id="player-view" class="view">
         <div id="pdf-drop-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; border: 4px dashed var(--accent-primary); color: white; opacity: 0; pointer-events: none; transition: opacity 0.2s ease;">
             <i class="fas fa-file-pdf" style="font-size: 5rem; color: var(--accent-primary); margin-bottom: 20px;"></i>
@@ -852,6 +1086,68 @@
             <button id="media-viewer-toggle-btn" class="hidden"><i class="fas fa-chevron-left"></i></button>
         </div>
         <button id="sidebar-toggle-btn"><i class="fas fa-chevron-left"></i></button>
+    </div>
+
+    <div id="faculty-view" class="view" style="position: relative;">
+        <div class="faculty-header" style="padding: 10px 24px; display: flex; justify-content: flex-end; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-primary); background: var(--bg-primary);">
+            <button id="reset-hidden-faculties-btn" title="Reset Preferences" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-secondary); background: var(--bg-tertiary); color: var(--text-primary); cursor: pointer; font-size: 0.85rem; font-weight: 500; display: none; align-items: center; justify-content: center; transition: background-color 0.2s;"><i class="fas fa-undo"></i></button>
+            <label for="faculty-sort-select" style="font-size: 0.9rem; color: var(--text-secondary); font-weight: 600;">Sort by:</label>
+            <select id="faculty-sort-select" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-secondary); background: var(--bg-tertiary); color: var(--text-primary); font-family: inherit; font-size: 0.85rem; font-weight: 500; cursor: pointer;">
+                <option value="most_studied">Most Studied (Hours)</option>
+                <option value="least_studied">Least Studied (Hours)</option>
+                <option value="most_taught_hours">Most Taught (Hours)</option>
+                <option value="least_taught_hours">Least Taught (Hours)</option>
+                <option value="most_lectures">Most Lectures</option>
+                <option value="least_lectures">Least Lectures</option>
+                <option value="most_fav">Most Fav</option>
+                <option value="least_fav">Least Fav</option>
+            </select>
+            <select id="faculty-time-filter" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-secondary); background: var(--bg-tertiary); color: var(--text-primary); font-family: inherit; font-size: 0.85rem; font-weight: 500; cursor: pointer; margin-right: auto;">
+                <option value="all">All Time</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+            </select>
+            <input type="file" id="faculty-photo-upload" accept="image/*" style="display: none;">
+            <button id="toggle-faculty-aside-btn" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--accent-primary); background: var(--accent-primary); color: white; cursor: pointer; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 6px; transition: background-color 0.2s;"><i class="fas fa-chart-pie"></i> Stats</button>
+        </div>
+        <div style="display: flex; flex-grow: 1; overflow: hidden; position: relative;">
+            <main id="faculty-grid" class="grid-container" style="flex: 1; padding: 1.5rem; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; align-content: start;"></main>
+            <aside id="faculty-aside">
+                <button id="close-faculty-aside-btn" style="position: absolute; top: 12px; left: 12px; background: none; border: none; color: var(--text-primary); font-size: 1.2rem; cursor: pointer;"><i class="fas fa-times"></i></button>
+                <h3 id="faculty-aside-title" style="margin-top: 0; margin-bottom: 24px; text-align: center; color: var(--text-secondary); font-weight: 600; font-size: 1.1rem;">Most Studied Teachers</h3>
+                <div id="faculty-pie-chart" style="width: 200px; height: 200px; border-radius: 50%; background: conic-gradient(var(--bg-tertiary) 0% 100%); display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                    <div style="width: 130px; height: 130px; background-color: var(--bg-secondary); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);">
+                        <span id="faculty-total-time" style="font-size: 1.25rem; font-weight: bold; color: var(--text-primary);">0h 0m</span>
+                        <span id="faculty-total-label" style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; margin-top: 4px; font-weight: 600;">Total Time</span>
+                    </div>
+                </div>
+                <div style="width: 100%; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-primary); padding-bottom: 8px; margin-bottom: 12px; font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">
+                    <span>Faculty</span>
+                    <span id="faculty-legend-metric">Time Studied</span>
+                </div>
+                <div id="faculty-pie-legend" style="width: 100%; display: flex; flex-direction: column; gap: 10px;"></div>
+            </aside>
+        </div>
+        
+        <div id="faculty-profile-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-primary); z-index: 200; display: none; flex-direction: column; overflow-y: auto;">
+            <div style="padding: 24px; border-bottom: 1px solid var(--border-primary); display: flex; align-items: center; gap: 16px; position: sticky; top: 0; background: var(--bg-primary); z-index: 10;">
+                <button id="close-faculty-profile-btn" class="primary-btn" style="font-size: 0.9rem; padding: 6px 12px;"><i class="fas fa-arrow-left"></i> Back to Faculties</button>
+                <h2 id="faculty-profile-title" style="margin: 0; font-size: 1.5rem; font-weight: 600; color: var(--text-primary);">Faculty Profile</h2>
+            </div>
+            <div id="faculty-profile-grid" class="course-grid" style="padding: 24px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; align-content: start;"></div>
+        </div>
+    </div>
+
+        <div id="reset-preferences-modal" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 300; display: none; align-items: center; justify-content: center;">
+            <div style="background: var(--bg-secondary); padding: 24px; border-radius: 12px; width: 300px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 1px solid var(--border-primary); display: flex; flex-direction: column; gap: 12px;">
+                <h3 style="margin: 0; font-size: 1.2rem; color: var(--text-primary); text-align: center;">Reset Preferences</h3>
+                <p style="margin: 0 0 12px 0; font-size: 0.85rem; color: var(--text-secondary); text-align: center;">What would you like to reset?</p>
+                <button id="reset-hidden-option-btn" class="primary-btn" style="width: 100%; padding: 10px;">Reset Hidden Items</button>
+                <button id="reset-merge-option-btn" class="primary-btn" style="width: 100%; padding: 10px;">Reset Teacher Merges</button>
+                <button id="reset-both-option-btn" class="primary-btn" style="width: 100%; padding: 10px; background: var(--accent-danger);">Reset Both</button>
+                <button id="reset-cancel-option-btn" style="width: 100%; padding: 10px; background: transparent; border: 1px solid var(--border-secondary); color: var(--text-primary); border-radius: 8px; cursor: pointer; margin-top: 8px;">Cancel</button>
+            </div>
+        </div>
     </div>
 
     <div id="modal-overlay" class="modal-overlay hidden">
@@ -1218,6 +1514,18 @@
             return subfolder.split('/').pop();
         }
 
+        function getSubfolderFacultyName(course, fullPath) {
+            if (!fullPath) return course.facultyName || 'N/A Faculty';
+            const parts = fullPath.split('/');
+            for (let i = parts.length; i > 0; i--) {
+                const currentPath = parts.slice(0, i).join('/');
+                if (course.subCourseData && course.subCourseData[currentPath] && course.subCourseData[currentPath].facultyName) {
+                    return course.subCourseData[currentPath].facultyName;
+                }
+            }
+            return course.facultyName || 'N/A Faculty';
+        }
+
         function calculateCourseProgress(course) {
             if (!course.lectures) return { completed: 0, total: course.videoCount || 0, percentage: 0, remainingDuration: course.totalDuration || 0, totalDuration: course.totalDuration || 0 };
             let completed = 0;
@@ -1394,6 +1702,7 @@
             if (viewId === 'doubts-view') renderDoubtsCourseSelectionView();
             if (viewId === 'continue-view') renderContinueView();
             if (viewId === 'history-view') renderHistoryView();
+            if (viewId === 'faculty-view') renderFacultyView();
             
             if (viewId !== 'player-view') {
                 sessionStorage.removeItem('courseflixState');
@@ -1669,7 +1978,11 @@
 
             const backLink = document.getElementById('back-to-dashboard-from-sub');
             const resumePath = viewEl.dataset.resumePath;
-            if (viewEl.dataset.origin === 'continue-view' && basePath === (resumePath || '')) {
+            if (viewEl.dataset.origin === 'faculty-view' && basePath === (resumePath || '')) {
+                backLink.innerHTML = '&larr; Back to Faculty';
+            } else if (viewEl.dataset.origin === 'search-results-view') {
+                backLink.innerHTML = '&larr; Back to Search';
+            } else if (viewEl.dataset.origin === 'continue-view' && basePath === (resumePath || '')) {
                 backLink.innerHTML = '&larr; Back to Continue';
             } else {
                 if (basePath === '') {
@@ -1684,7 +1997,7 @@
                 if (subData.hidden) return; // Skip hidden subcourses
 
                 const folderNameOnly = getSubfolderDisplayName(course, fullPath);
-                const faculty = subData.facultyName || course.facultyName || 'N/A Faculty';
+                const faculty = getSubfolderFacultyName(course, fullPath);
                 const rating = subData.rating !== undefined ? subData.rating : (course.rating || 0);
                 const thumb = subData.thumbnail || course.thumbnail || null;
 
@@ -1952,7 +2265,7 @@
                 if (subData.hidden) return;
 
                 const folderNameOnly = getSubfolderDisplayName(course, fullPath);
-                const faculty = subData.facultyName || course.facultyName || 'N/A Faculty';
+                const faculty = getSubfolderFacultyName(course, fullPath);
                 const thumb = subData.thumbnail || course.thumbnail || null;
                 const subLectures = course.lectures.filter(l => l.chapter === fullPath || l.chapter.startsWith(fullPath + '/'));
                 const total = subLectures.length;
@@ -2134,13 +2447,18 @@
                 if (targetL) currentSubfolder = targetL.chapter;
             }
 
-            if (originView === 'dashboard-view') {
+            if (window.lastViewedFaculty) {
+                backToLibraryBtn.textContent = 'Back to Faculty';
+            } else if (originView === 'dashboard-view') {
                 backToLibraryBtn.textContent = '← Back to Courses';
             } else if (originView === 'subcourse-view') {
                 const subViewEl = document.getElementById('subcourse-view');
                 if (subViewEl.dataset.origin === 'continue-view' && currentSubfolder === (subViewEl.dataset.resumePath || '')) {
                     backToLibraryBtn.textContent = '← Back to Continue';
                     originView = 'continue-view';
+                } else if (subViewEl.dataset.origin === 'search-results-view') {
+                    backToLibraryBtn.textContent = '← Back to Search';
+                    originView = 'search-results-view';
                 } else {
                     backToLibraryBtn.textContent = currentSubfolder ? '← Back to Folder' : '← Back to Course';
                 }
@@ -2155,8 +2473,8 @@
             if (subfolder) {
                 chaptersToDisplay = chaptersToDisplay.filter(ch => ch.name === subfolder || ch.name.startsWith(subfolder + '/'));
                 courseTitleMenu.textContent = `${currentCourse.title} - ${getSubfolderDisplayName(currentCourse, subfolder)}`;
-                // Only set back view to subcourse-view if we didn't come from doubts, continue, or history (preserve those origins)
-                if (originView !== 'doubts-detail-view' && originView !== 'continue-view' && originView !== 'history-view') {
+                // Only set back view to subcourse-view if we didn't come from doubts, continue, history, or search (preserve those origins)
+                if (originView !== 'doubts-detail-view' && originView !== 'continue-view' && originView !== 'history-view' && originView !== 'search-results-view') {
                     backToLibraryBtn.dataset.view = 'subcourse-view';
                 }
                 backToLibraryBtn.dataset.subfolder = subfolder;
@@ -2685,12 +3003,22 @@
                 const course = courses.find(c => c.id === courseId);
                 if(!course) return;
 
+                const isFromSearch = e.target.closest('#search-results-view') !== null;
+                const viewEl = document.getElementById('subcourse-view');
+                if (isFromSearch) {
+                    viewEl.dataset.origin = 'search-results-view';
+                    viewEl.dataset.resumePath = subfolder || '';
+                } else {
+                    viewEl.dataset.origin = 'dashboard-view';
+                    delete viewEl.dataset.resumePath;
+                }
+
                 if (subfolder) {
                     const isSplit = course.subCourseData && course.subCourseData[subfolder] && course.subCourseData[subfolder].isSplitView;
-                    if (isSplit) {
+                    if (isSplit || isFromSearch) {
                         await renderSubcourseView(course.id, subfolder);
                     } else {
-                        await playLectureFromAnywhere(courseId, null, 'subcourse-view', subfolder);
+                        await playLectureFromAnywhere(courseId, null, isFromSearch ? 'search-results-view' : 'subcourse-view', subfolder);
                     }
                 } else {
                     if (course.isSplitView && course.isLinked) {
@@ -2925,7 +3253,18 @@
                 const origin = viewEl.dataset.origin || 'dashboard-view';
                 const resumePath = viewEl.dataset.resumePath;
                 
-                if (origin === 'continue-view' && currentPath === (resumePath || '')) {
+                if (origin === 'faculty-view' && currentPath === (resumePath || '')) {
+                    const facultyToLoad = window.lastViewedFaculty;
+                    window.lastViewedFaculty = null;
+                    switchView('faculty-view');
+                    if(facultyToLoad) renderFacultyProfile(facultyToLoad);
+                    viewEl.dataset.origin = 'dashboard-view';
+                    delete viewEl.dataset.resumePath;
+                } else if (origin === 'search-results-view') {
+                    switchView('search-results-view');
+                    viewEl.dataset.origin = 'dashboard-view';
+                    delete viewEl.dataset.resumePath;
+                } else if (origin === 'continue-view' && currentPath === (resumePath || '')) {
                     renderContinueView();
                     switchView('continue-view');
                     viewEl.dataset.origin = 'dashboard-view';
@@ -3037,7 +3376,6 @@
                     if (!course) return;
 
                     const newName = input.value.trim();
-                    facultyDiv.textContent = newName || 'N/A Faculty';
                     
                     if (subfolder) {
                         course.subCourseData = course.subCourseData || {};
@@ -3052,6 +3390,7 @@
                              await new Promise(resolve => getStore(STORE_NAME, 'readwrite').put(course).onsuccess = resolve);
                          }
                     }
+                    facultyDiv.textContent = getSubfolderFacultyName(course, subfolder);
                 };
                 
                 input.addEventListener('blur', saveFacultyName);
@@ -3226,20 +3565,29 @@
             // Save last played lecture before leaving
             await saveLastPlayedLecture();
             sessionStorage.removeItem('courseflixState');
-            videoPlayer.pause(); videoPlayer.removeAttribute('src'); videoPlayer.load();
+            videoPlayer.pause(); videoPlayer.removeAttribute('src');
             hideMediaViewer();
+            if (window.lastViewedFaculty) {
+                const facultyToLoad = window.lastViewedFaculty;
+                window.lastViewedFaculty = null;
+                switchView('faculty-view');
+                renderFacultyProfile(facultyToLoad);
+                return;
+            }
             const targetView = backToLibraryBtn.dataset.view || 'dashboard-view';
             if (targetView === 'subcourse-view') {
                 const path = currentSubfolder ? getParentPath(currentSubfolder) : '';
                 renderSubcourseView(currentCourse.id, path);
             } else if (targetView.includes('review') || targetView.includes('practice')) {
                 showFilteredCoursesView(targetView.split('-')[0]);
-            } else if (targetView === 'doubts-detail-view') {
-                renderDoubtsDetailView(currentCourse.id, currentSubfolder);
-                switchView('doubts-view');
-            } else if (targetView === 'continue-view') {
-                renderContinueView();
+            } else if (targetView === 'search-results-view') {
                 switchView(targetView);
+            } else if (targetView === 'dashboard-view' || targetView === 'continue-view') {
+                if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    switchView(targetView);
+                }
             } else {
                 switchView(targetView);
             }
@@ -5016,7 +5364,7 @@
             const uniqueCoursesMap = new Map();
             recentHistory.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // Newest first
             for (const h of recentHistory) {
-                const key = `${h.courseId}_${h.subfolder || ''}`;
+                const key = `${h.courseId}_${h.subfolder || ''}_${h.lectureId}`;
                 if (!uniqueCoursesMap.has(key)) {
                     uniqueCoursesMap.set(key, h);
                 }
@@ -5077,6 +5425,16 @@
                         const isSubfolderIgnored = h.subfolder && course.subCourseData && course.subCourseData[h.subfolder] && course.subCourseData[h.subfolder].isIgnored;
                         if (isSubfolderIgnored) {
                             filteredLectures = course.lectures.filter(l => l.chapter === h.subfolder || l.chapter.startsWith(h.subfolder + '/'));
+                        } else {
+                            // Exclude any lectures that belong to ignored subfolders from the overall count
+                            if (course.subCourseData) {
+                                const ignoredSubfolders = Object.keys(course.subCourseData).filter(sub => course.subCourseData[sub].isIgnored);
+                                if (ignoredSubfolders.length > 0) {
+                                    filteredLectures = course.lectures.filter(l => {
+                                        return !ignoredSubfolders.some(ignoredSub => l.chapter === ignoredSub || l.chapter.startsWith(ignoredSub + '/'));
+                                    });
+                                }
+                            }
                         }
                         const idx = filteredLectures.findIndex(l => l.id === h.lectureId);
                         if (idx !== -1) {
@@ -5105,7 +5463,7 @@
                                 <h3 title="${rawTitle}" style="font-size:1.15rem; margin-bottom:2px; display: flex; align-items: center; max-width: 100%; overflow: hidden;">${titleHTML}</h3>
                                 <p style="font-size: 0.95rem; color: var(--text-primary); margin-top: 5px; font-weight: 500; display:flex; align-items:center;">${cardSubtitle}</p>
                                 <div class="course-extra-info" style="justify-content: space-between; margin-top: 8px;">
-                                    <div class="course-faculty" style="font-size:0.85rem;">${course.facultyName || 'N/A Faculty'}</div>
+                                    <div class="course-faculty" style="font-size:0.85rem;">${getSubfolderFacultyName(course, h.subfolder)}</div>
                                     <div style="font-size: 0.8rem; color: var(--text-secondary);">${formattedDate}</div>
                                 </div>
                                 <p class="course-meta" style="color: #22c55e; margin-top: 8px; font-weight: bold; font-size:0.9rem;">${timeRemainingHrs} hrs left in this course</p>
@@ -5487,6 +5845,629 @@
              document.getElementById('calc-result-stats').innerText = `${pendingLectures} pending lectures (${Math.ceil(adjustedHours)} hrs adjusted view time).`;
         }
         
+        // --- FACULTY VIEW LOGIC ---
+        function renderFacultyView() {
+            const facultyGrid = document.getElementById('faculty-grid');
+            facultyGrid.innerHTML = '';
+            
+            // 1. Aggregate Faculty Data
+            const facultyMap = new Map(); // name -> { name, totalLectures, totalDurationSec, studiedDurationSec, studiedLectures }
+            const aliases = JSON.parse(localStorage.getItem('courseflix_faculty_aliases')) || {};
+            
+            const processCourseForFaculty = (facultyName, courseTotalLectures, courseTotalDuration, courseStudiedDuration, courseStudiedLectures) => {
+                if (!facultyName || facultyName === 'Unknown' || facultyName === 'N/A Faculty') return;
+                
+                let finalName = facultyName;
+                while (aliases[finalName]) {
+                    finalName = aliases[finalName];
+                }
+
+                let data = facultyMap.get(finalName);
+                if (!data) {
+                    data = { name: finalName, totalLectures: 0, totalDurationSec: 0, studiedDurationSec: 0, studiedLectures: 0 };
+                    facultyMap.set(finalName, data);
+                }
+                data.totalLectures += courseTotalLectures;
+                data.totalDurationSec += courseTotalDuration;
+                data.studiedDurationSec += courseStudiedDuration;
+                data.studiedLectures += courseStudiedLectures;
+            };
+
+            const timeFilter = document.getElementById('faculty-time-filter').value;
+            let timeCutoff = 0;
+            const now = Date.now();
+            if (timeFilter === 'weekly') timeCutoff = now - 7 * 24 * 60 * 60 * 1000;
+            else if (timeFilter === 'monthly') timeCutoff = now - 30 * 24 * 60 * 60 * 1000;
+
+            courses.forEach(course => {
+                if (!course.lectures) return;
+                
+                let hasSubfolders = course.subCourseData && Object.keys(course.subCourseData).length > 0;
+                if (!hasSubfolders && course.lectures && course.lectures.some(l => l.chapter)) {
+                    hasSubfolders = true;
+                }
+                
+                if (!hasSubfolders) {
+                    let totalLecs = 0, totalDur = 0, watchedDur = 0, watchedLecs = 0;
+                    course.lectures.forEach(lecture => {
+                        totalLecs++;
+                        totalDur += (lecture.duration || 0);
+                        const prog = getLectureProgress(course.id, lecture.id);
+                        if (prog && prog.completed) {
+                            if (timeCutoff > 0) {
+                                if (prog.completedAt && new Date(prog.completedAt).getTime() >= timeCutoff) {
+                                    watchedDur += (lecture.duration || 0);
+                                    watchedLecs++;
+                                }
+                            } else {
+                                watchedDur += (lecture.duration || 0);
+                                watchedLecs++;
+                            }
+                        }
+                    });
+                    processCourseForFaculty(course.facultyName || 'Unknown', totalLecs, totalDur, watchedDur, watchedLecs);
+                } else {
+                    const subfolderStats = {}; 
+                    
+                    course.lectures.forEach(lecture => {
+                        let topLevel = '';
+                        if (lecture.chapter) {
+                            topLevel = lecture.chapter.split('/')[0];
+                        }
+                        
+                        let matchedSub = null;
+                        for (const subName in course.subCourseData) {
+                            if (lecture.chapter === subName || lecture.chapter.startsWith(subName + '/')) {
+                                matchedSub = subName;
+                                break;
+                            }
+                        }
+                        
+                        const effectiveSub = matchedSub || topLevel || 'Other Videos';
+                        
+                        if (!subfolderStats[effectiveSub]) {
+                            let fName = course.facultyName || 'Unknown';
+                            if (course.subCourseData[effectiveSub] && course.subCourseData[effectiveSub].facultyName) {
+                                fName = course.subCourseData[effectiveSub].facultyName;
+                            }
+                            subfolderStats[effectiveSub] = { totalLecs: 0, totalDur: 0, watchedDur: 0, watchedLecs: 0, facultyName: fName };
+                        }
+                        
+                        subfolderStats[effectiveSub].totalLecs++;
+                        subfolderStats[effectiveSub].totalDur += (lecture.duration || 0);
+                        const prog = getLectureProgress(course.id, lecture.id);
+                        if (prog && prog.completed) {
+                            if (timeCutoff > 0) {
+                                if (prog.completedAt && new Date(prog.completedAt).getTime() >= timeCutoff) {
+                                    subfolderStats[effectiveSub].watchedDur += (lecture.duration || 0);
+                                    subfolderStats[effectiveSub].watchedLecs++;
+                                }
+                            } else {
+                                subfolderStats[effectiveSub].watchedDur += (lecture.duration || 0);
+                                subfolderStats[effectiveSub].watchedLecs++;
+                            }
+                        }
+                    });
+                    
+                    for (const subName in subfolderStats) {
+                        const stats = subfolderStats[subName];
+                        processCourseForFaculty(stats.facultyName, stats.totalLecs, stats.totalDur, stats.watchedDur, stats.watchedLecs);
+                    }
+                }
+            });
+
+            const hiddenFaculties = JSON.parse(localStorage.getItem('courseflix_hidden_faculties')) || [];
+            const hiddenProfileCourses = JSON.parse(localStorage.getItem('courseflix_hidden_profile_courses')) || [];
+            const resetBtn = document.getElementById('reset-hidden-faculties-btn');
+            const hasAliases = Object.keys(aliases).length > 0;
+            if (hiddenFaculties.length > 0 || hasAliases || hiddenProfileCourses.length > 0) {
+                resetBtn.style.display = 'inline-flex';
+            } else {
+                resetBtn.style.display = 'none';
+            }
+
+            const faculties = Array.from(facultyMap.values()).filter(f => !hiddenFaculties.includes(f.name));
+            let facultyRatings = JSON.parse(localStorage.getItem('courseflix_faculty_meta')) || {};
+            
+            faculties.forEach(f => {
+                const meta = facultyRatings[f.name] || { rating: 0, photo: '' };
+                f.rating = meta.rating;
+                f.photo = meta.photo;
+            });
+            
+            const sortVal = document.getElementById('faculty-sort-select').value;
+            let chartProperty = 'studiedDurationSec';
+            let chartLabel = 'Time Studied';
+            let chartIsTime = true;
+
+            if (sortVal === 'most_studied') { faculties.sort((a,b) => b.studiedDurationSec - a.studiedDurationSec); }
+            else if (sortVal === 'least_studied') { faculties.sort((a,b) => a.studiedDurationSec - b.studiedDurationSec); }
+            else if (sortVal === 'most_taught_hours') { faculties.sort((a,b) => b.totalDurationSec - a.totalDurationSec); chartProperty = 'totalDurationSec'; chartLabel = 'Hours Taught'; }
+            else if (sortVal === 'least_taught_hours') { faculties.sort((a,b) => a.totalDurationSec - b.totalDurationSec); chartProperty = 'totalDurationSec'; chartLabel = 'Hours Taught'; }
+            else if (sortVal === 'most_lectures') { faculties.sort((a,b) => b.totalLectures - a.totalLectures); chartProperty = 'totalLectures'; chartLabel = 'Lectures Taught'; chartIsTime = false; }
+            else if (sortVal === 'least_lectures') { faculties.sort((a,b) => a.totalLectures - b.totalLectures); chartProperty = 'totalLectures'; chartLabel = 'Lectures Taught'; chartIsTime = false; }
+            else if (sortVal === 'most_fav') { faculties.sort((a,b) => b.rating - a.rating); }
+            else if (sortVal === 'least_fav') { faculties.sort((a,b) => a.rating - b.rating); }
+            
+            const asideTitle = document.getElementById('faculty-aside-title');
+            if (sortVal === 'most_studied') asideTitle.innerText = 'Most Studied Teachers';
+            else if (sortVal === 'least_studied') asideTitle.innerText = 'Least Studied Teachers';
+            else if (sortVal === 'most_taught_hours') asideTitle.innerText = 'Most Taught Teachers';
+            else if (sortVal === 'least_taught_hours') asideTitle.innerText = 'Least Taught Teachers';
+            else if (sortVal === 'most_lectures') asideTitle.innerText = 'Most Lectures';
+            else if (sortVal === 'least_lectures') asideTitle.innerText = 'Least Lectures';
+            else if (sortVal === 'most_fav') asideTitle.innerText = 'Highest Rated Teachers';
+            else if (sortVal === 'least_fav') asideTitle.innerText = 'Lowest Rated Teachers';
+            
+            const pieChart = document.getElementById('faculty-pie-chart');
+            const pieLegend = document.getElementById('faculty-pie-legend');
+            const totalTimeSpan = document.getElementById('faculty-total-time');
+            const totalTimeLabel = document.getElementById('faculty-total-label');
+            const legendMetricLabel = document.getElementById('faculty-legend-metric');
+            
+            pieLegend.innerHTML = '';
+            
+            let totalAppMetric = faculties.reduce((sum, f) => sum + f[chartProperty], 0);
+            
+            if (chartIsTime) {
+                totalTimeSpan.innerText = totalAppMetric > 0 ? `${Math.floor(totalAppMetric / 3600)}h ${Math.floor((totalAppMetric % 3600)/60)}m` : '0h 0m';
+                if(totalTimeLabel) totalTimeLabel.innerText = 'Total Time';
+                if(legendMetricLabel) legendMetricLabel.innerText = chartLabel;
+            } else {
+                totalTimeSpan.innerText = totalAppMetric;
+                if(totalTimeLabel) totalTimeLabel.innerText = 'Total ' + chartLabel;
+                if(legendMetricLabel) legendMetricLabel.innerText = chartLabel;
+            }
+            
+            const chartFaculties = [...faculties]; 
+            // Sort by metric descending for chart presentation (regardless of current sort)
+            chartFaculties.sort((a,b) => b[chartProperty] - a[chartProperty]);
+            const topChartFaculties = chartFaculties.slice(0, 5); 
+            const otherChartFaculties = chartFaculties.slice(5);
+            let otherMetric = otherChartFaculties.reduce((sum, f) => sum + f[chartProperty], 0);
+            
+            const chartData = [...topChartFaculties];
+            if (otherMetric > 0) {
+                let otherObj = { name: 'Others' };
+                otherObj[chartProperty] = otherMetric;
+                chartData.push(otherObj);
+            }
+            
+            const colors = ['#16a34a', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'];
+            let conicGradientStr = '';
+            let currentAngle = 0;
+            
+            chartData.forEach((f, idx) => {
+                if (totalAppMetric === 0) return;
+                const percentage = (f[chartProperty] / totalAppMetric) * 100;
+                const nextAngle = currentAngle + percentage;
+                const color = colors[idx % colors.length];
+                
+                conicGradientStr += `${color} ${currentAngle}% ${nextAngle}%, `;
+                currentAngle = nextAngle;
+                
+                let metricStr = '';
+                if (chartIsTime) {
+                    metricStr = f[chartProperty] > 0 ? `${Math.floor(f[chartProperty]/3600)}h ${Math.floor((f[chartProperty]%3600)/60)}m` : '0m';
+                } else {
+                    metricStr = f[chartProperty].toString();
+                }
+                
+                const legendHtml = `
+                    <div class="pie-legend-item">
+                        <div style="display: flex; align-items: center;">
+                            <div class="pie-legend-color" style="background-color: ${color}"></div>
+                            <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">${f.name}</span>
+                        </div>
+                        <span>${metricStr}</span>
+                    </div>
+                `;
+                pieLegend.insertAdjacentHTML('beforeend', legendHtml);
+            });
+            
+            if (conicGradientStr) {
+                conicGradientStr = conicGradientStr.slice(0, -2); 
+                pieChart.style.background = `conic-gradient(${conicGradientStr})`;
+            } else {
+                pieChart.style.background = `var(--bg-tertiary)`;
+                pieLegend.innerHTML = '<div style="text-align:center; color:var(--text-secondary); padding:20px;">No data yet</div>';
+            }
+
+            faculties.forEach(f => {
+                const totalTaughtStr = `${Math.floor(f.totalDurationSec / 3600)}h ${Math.floor((f.totalDurationSec % 3600)/60)}m`;
+                const totalStudiedStr = `${Math.floor(f.studiedDurationSec / 3600)}h ${Math.floor((f.studiedDurationSec % 3600)/60)}m`;
+                
+                const card = document.createElement('div');
+                card.className = 'faculty-card';
+                card.innerHTML = `
+                    <button class="hide-faculty-btn" data-faculty="${f.name}" title="Hide Faculty"><i class="fas fa-times"></i></button>
+                    <div class="faculty-card-banner">
+                        <div class="faculty-photo" style="cursor: pointer;" title="Edit Profile Photo">
+                            ${f.photo ? `<img src="${f.photo}" alt="${f.name}">` : '<i class="fas fa-user"></i>'}
+                            <div class="edit-photo-overlay">
+                                <i class="fas fa-pencil-alt" style="color: white; font-size: 1rem;"></i>
+                            </div>
+                        </div>
+                        <div class="faculty-card-header-info">
+                            <h3 class="faculty-name" title="${f.name}">${f.name}</h3>
+                            <div class="faculty-rating-stars" data-faculty="${f.name}">
+                                ${[1,2,3,4,5].map(i => `<i class="fa-star ${i <= f.rating ? 'fas' : 'far'}" data-val="${i}"></i>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="faculty-stats-grid">
+                        <div class="faculty-stat-item">
+                            <span class="faculty-stat-val">${totalTaughtStr}</span>
+                            <span class="faculty-stat-label">Hrs Taught</span>
+                        </div>
+                        <div class="faculty-stat-item">
+                            <span class="faculty-stat-val">${totalStudiedStr}</span>
+                            <span class="faculty-stat-label">Hrs Studied</span>
+                        </div>
+                        <div class="faculty-stat-item">
+                            <span class="faculty-stat-val">${f.totalLectures}</span>
+                            <span class="faculty-stat-label">Lecs Taught</span>
+                        </div>
+                        <div class="faculty-stat-item">
+                            <span class="faculty-stat-val">${f.studiedLectures}</span>
+                            <span class="faculty-stat-label">Lecs Studied</span>
+                        </div>
+                    </div>
+                    <button class="view-faculty-profile-btn" data-faculty="${f.name}">Enter Profile</button>
+                `;
+                
+                const stars = card.querySelectorAll('.faculty-rating-stars i');
+                stars.forEach(s => {
+                    s.addEventListener('click', (e) => {
+                        const val = parseInt(e.target.dataset.val);
+                        let meta = JSON.parse(localStorage.getItem('courseflix_faculty_meta')) || {};
+                        if (!meta[f.name]) meta[f.name] = { rating: 0, photo: '' };
+                        meta[f.name].rating = val;
+                        localStorage.setItem('courseflix_faculty_meta', JSON.stringify(meta));
+                        renderFacultyView(); 
+                    });
+                });
+                
+                const viewBtn = card.querySelector('.view-faculty-profile-btn');
+                viewBtn.addEventListener('click', () => {
+                    renderFacultyProfile(f.name);
+                });
+                
+                const photoDiv = card.querySelector('.faculty-photo');
+                photoDiv.addEventListener('mouseenter', () => photoDiv.querySelector('.edit-photo-overlay').style.opacity = '1');
+                photoDiv.addEventListener('mouseleave', () => photoDiv.querySelector('.edit-photo-overlay').style.opacity = '0');
+                photoDiv.addEventListener('click', () => {
+                    const fileInput = document.getElementById('faculty-photo-upload');
+                    fileInput.onchange = (e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (readerEvent) => {
+                                const base64Data = readerEvent.target.result;
+                                let meta = JSON.parse(localStorage.getItem('courseflix_faculty_meta')) || {};
+                                if (!meta[f.name]) meta[f.name] = { rating: 0, photo: '' };
+                                meta[f.name].photo = base64Data;
+                                localStorage.setItem('courseflix_faculty_meta', JSON.stringify(meta));
+                                renderFacultyView();
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                        fileInput.value = ''; // reset for next use
+                    };
+                    fileInput.click();
+                });
+
+                const hideBtn = card.querySelector('.hide-faculty-btn');
+                hideBtn.addEventListener('click', () => {
+                    let hidden = JSON.parse(localStorage.getItem('courseflix_hidden_faculties')) || [];
+                    if (!hidden.includes(f.name)) hidden.push(f.name);
+                    localStorage.setItem('courseflix_hidden_faculties', JSON.stringify(hidden));
+                    renderFacultyView();
+                });
+                
+                card.draggable = true;
+                
+                card.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', f.name);
+                    card.style.opacity = '0.5';
+                });
+                
+                card.addEventListener('dragend', (e) => {
+                    card.style.opacity = '1';
+                });
+                
+                card.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    card.style.borderColor = 'var(--accent-primary)';
+                    card.style.boxShadow = '0 0 10px var(--accent-primary)';
+                });
+                
+                card.addEventListener('dragleave', (e) => {
+                    card.style.borderColor = 'var(--border-primary)';
+                    card.style.boxShadow = 'none';
+                });
+                
+                card.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    card.style.borderColor = 'var(--border-primary)';
+                    card.style.boxShadow = 'none';
+                    const draggedName = e.dataTransfer.getData('text/plain');
+                    if (draggedName && draggedName !== f.name) {
+                        let aliasesMap = JSON.parse(localStorage.getItem('courseflix_faculty_aliases')) || {};
+                        aliasesMap[draggedName] = f.name;
+                        localStorage.setItem('courseflix_faculty_aliases', JSON.stringify(aliasesMap));
+                        renderFacultyView();
+                    }
+                });
+
+                facultyGrid.appendChild(card);
+            });
+            
+            if (faculties.length === 0) {
+                facultyGrid.innerHTML = '<div id="no-content-message" style="grid-column: 1/-1;">No faculties found or all are hidden.</div>';
+            }
+        }
+        
+        document.getElementById('faculty-sort-select').addEventListener('change', renderFacultyView);
+        document.getElementById('faculty-time-filter').addEventListener('change', renderFacultyView);
+        const resetModal = document.getElementById('reset-preferences-modal');
+        document.getElementById('reset-hidden-faculties-btn').addEventListener('click', () => {
+            resetModal.style.display = 'flex';
+        });
+        document.getElementById('reset-hidden-option-btn').addEventListener('click', () => {
+            localStorage.removeItem('courseflix_hidden_faculties');
+            localStorage.removeItem('courseflix_hidden_profile_courses');
+            resetModal.style.display = 'none';
+            renderFacultyView();
+        });
+        document.getElementById('reset-merge-option-btn').addEventListener('click', () => {
+            localStorage.removeItem('courseflix_faculty_aliases');
+            resetModal.style.display = 'none';
+            renderFacultyView();
+        });
+        document.getElementById('reset-both-option-btn').addEventListener('click', () => {
+            localStorage.removeItem('courseflix_hidden_faculties');
+            localStorage.removeItem('courseflix_faculty_aliases');
+            localStorage.removeItem('courseflix_hidden_profile_courses');
+            resetModal.style.display = 'none';
+            renderFacultyView();
+        });
+        document.getElementById('reset-cancel-option-btn').addEventListener('click', () => {
+            resetModal.style.display = 'none';
+        });
+        resetModal.addEventListener('click', (e) => {
+            if (e.target === resetModal) resetModal.style.display = 'none';
+        });
+        
+        
+        document.getElementById('toggle-faculty-aside-btn').addEventListener('click', () => {
+            document.getElementById('faculty-aside').classList.add('open');
+        });
+        document.getElementById('close-faculty-aside-btn').addEventListener('click', () => {
+            document.getElementById('faculty-aside').classList.remove('open');
+        });
+        document.getElementById('close-faculty-profile-btn').addEventListener('click', () => {
+            document.getElementById('faculty-profile-overlay').style.display = 'none';
+        });
+
+        function renderFacultyProfile(facultyName) {
+            document.getElementById('faculty-profile-overlay').style.display = 'flex';
+            document.getElementById('faculty-profile-title').innerText = facultyName;
+            const grid = document.getElementById('faculty-profile-grid');
+            grid.innerHTML = '';
+            
+            let animDelay = 0;
+            const items = [];
+            const aliases = JSON.parse(localStorage.getItem('courseflix_faculty_aliases')) || {};
+            const resolveAlias = (name) => {
+                let current = name;
+                while (aliases[current]) {
+                    current = aliases[current];
+                }
+                return current;
+            };
+
+            const hiddenCourses = JSON.parse(localStorage.getItem('courseflix_hidden_profile_courses')) || [];
+
+            courses.forEach(course => {
+                let hasSubfolders = course.subCourseData && Object.keys(course.subCourseData).length > 0;
+                if (!hasSubfolders && course.lectures && course.lectures.some(l => l.chapter)) {
+                    hasSubfolders = true;
+                }
+                if (!hasSubfolders) {
+                    if (resolveAlias(course.facultyName || 'Unknown') === facultyName) {
+                        if (!hiddenCourses.includes(course.id.toString())) {
+                            items.push({ type: 'course', course });
+                        }
+                    }
+                } else {
+                    const processedSubs = new Set();
+                    if (course.lectures) {
+                        course.lectures.forEach(lecture => {
+                            let topLevel = '';
+                            if (lecture.chapter) {
+                                topLevel = lecture.chapter.split('/')[0];
+                            }
+                            
+                            let matchedSub = null;
+                            if (course.subCourseData) {
+                                for (const subName in course.subCourseData) {
+                                    if (lecture.chapter === subName || lecture.chapter.startsWith(subName + '/')) {
+                                        matchedSub = subName;
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            const effectiveSub = matchedSub || topLevel || 'Other Videos';
+                            if (!processedSubs.has(effectiveSub)) {
+                                processedSubs.add(effectiveSub);
+                                
+                                let fName = course.facultyName || 'Unknown';
+                                if (course.subCourseData && course.subCourseData[effectiveSub] && course.subCourseData[effectiveSub].facultyName) {
+                                    fName = course.subCourseData[effectiveSub].facultyName;
+                                }
+                                
+                                if (resolveAlias(fName) === facultyName) {
+                                    if (!hiddenCourses.includes(`${course.id}|${effectiveSub}`)) {
+                                        items.push({ type: 'subfolder', course, subfolder: effectiveSub, subfolderRedirect: effectiveSub === 'Other Videos' ? '' : effectiveSub });
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+
+            if (items.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; color: var(--text-secondary);">No courses found.</div>';
+                return;
+            }
+
+            items.forEach(item => {
+                const course = item.course;
+                const isSubfolder = item.type === 'subfolder';
+                const subPath = item.subfolder;
+                
+                let progress, ratingStarsHTML, titleHTML, cardSubtitle;
+                
+                if (isSubfolder) {
+                    const subLectures = course.lectures ? course.lectures.filter(l => l.chapter === subPath || l.chapter.startsWith(subPath + '/')) : [];
+                    const total = subLectures.length;
+                    let completed = 0;
+                    let remainingSecs = 0;
+                    subLectures.forEach(l => {
+                        const lp = getLectureProgress(course.id, l.id);
+                        if(lp.completed) completed++;
+                        else remainingSecs += (l.duration || 0);
+                    });
+                    progress = { completed, total, percentage: total > 0 ? (completed/total)*100 : 0 };
+                    
+                    const subData = (course.subCourseData && course.subCourseData[subPath]) || {};
+                    const rating = subData.rating !== undefined ? subData.rating : (course.rating || 0);
+                    ratingStarsHTML = Array.from({length: 5}, (_, i) => `<i class="fa${i < rating ? 's' : 'r'} fa-star" style="color: ${i < rating ? '#eab308' : 'var(--text-secondary)'};"></i>`).join('');
+                    
+                    const displayTitle = typeof getSubfolderDisplayName === 'function' ? getSubfolderDisplayName(course, subPath) : subPath;
+                    titleHTML = `${displayTitle} <span style="font-size: 0.75rem; font-weight: bold; color: white; background: #8b5cf6; padding: 2px 8px; border-radius: 12px; margin-left: 8px;">Subject</span>`;
+                    cardSubtitle = `<div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 8px;">
+                        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${course.title}</span>
+                        <span style="display: flex; align-items: center; gap: 4px; background: rgba(59, 130, 246, 0.15); color: #3b82f6; padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; white-space: nowrap; flex-shrink: 0;">
+                            <i class="far fa-clock"></i> ${Math.ceil(remainingSecs / 3600)} hrs left
+                        </span>
+                    </div>`;
+                } else {
+                    progress = typeof calculateCourseProgress === 'function' ? calculateCourseProgress(course) : { completed: 0, total: 0, percentage: 0 };
+                    const remainingSecs = progress.remainingDuration || 0;
+                    ratingStarsHTML = Array.from({length: 5}, (_, i) => `<i class="fa${i < (course.rating || 0) ? 's' : 'r'} fa-star" style="color: ${i < (course.rating || 0) ? '#eab308' : 'var(--text-secondary)'};"></i>`).join('');
+                    titleHTML = `${course.title} <span style="font-size: 0.75rem; font-weight: bold; color: white; background: #8b5cf6; padding: 2px 8px; border-radius: 12px; margin-left: 8px;">Subject</span>`;
+                    cardSubtitle = `<div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 8px;">
+                        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Course</span>
+                        <span style="display: flex; align-items: center; gap: 4px; background: rgba(59, 130, 246, 0.15); color: #3b82f6; padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; white-space: nowrap; flex-shrink: 0;">
+                            <i class="far fa-clock"></i> ${Math.ceil(remainingSecs / 3600)} hrs left
+                        </span>
+                    </div>`;
+                }
+                
+                let hasDeeperFolders = false;
+                if (isSubfolder) {
+                    const prefix = subPath + '/';
+                    hasDeeperFolders = course.lectures && course.lectures.some(l => l.chapter && l.chapter.startsWith(prefix) && l.chapter.length > prefix.length);
+                } else {
+                    hasDeeperFolders = course.chapters && course.chapters.length > 0;
+                }
+                
+                const card = document.createElement('div');
+                card.className = 'course-card search-anim-item';
+                card.style.animationDelay = `${animDelay}s`;
+                animDelay += 0.03;
+                card.dataset.id = course.id;
+                
+                let thumbnailHTML = '<i class="fas fa-book"></i>';
+                if (isSubfolder && course.subCourseData && course.subCourseData[subPath] && course.subCourseData[subPath].thumbnail) {
+                     thumbnailHTML = `<img src="${course.subCourseData[subPath].thumbnail}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-book\\'></i>'">`;
+                } else if (course.thumbnail) {
+                     thumbnailHTML = `<img src="${course.thumbnail}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-book\\'></i>'">`;
+                }
+                
+                card.innerHTML = `
+                    <div class="thumbnail-placeholder" data-id="${course.id}" ${item.subfolderRedirect ? `data-subfolder="${item.subfolderRedirect}"` : (isSubfolder ? `data-subfolder="${subPath}"` : '')}>
+                        ${thumbnailHTML}
+                        <button class="hide-profile-course-btn" data-id="${course.id}" data-subfolder="${isSubfolder ? subPath : ''}" title="Hide Course from Profile" style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="course-info">
+                        <h3 title="${isSubfolder ? subPath : course.title}" style="display: flex; align-items: center; flex-wrap: wrap; gap: 4px;">${titleHTML}</h3>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 500; width: 100%;">${cardSubtitle}</div>
+                        <div class="course-extra-info">
+                            <div class="course-faculty">${facultyName}</div>
+                            <div class="course-rating" style="pointer-events: none;">${ratingStarsHTML}</div>
+                        </div>
+                        <div class="course-progress-container" style="margin-top: auto;">
+                            <div class="course-progress-bar"><div class="course-progress-fill" style="width: ${progress.percentage}%"></div></div>
+                            <div class="course-progress-text">${progress.completed} / ${progress.total || course.videoCount || 0} completed</div>
+                        </div>
+                    </div>
+                    <button class="enter-course-btn" data-id="${course.id}" data-has-deeper="${hasDeeperFolders}" ${item.subfolderRedirect ? `data-subfolder="${item.subfolderRedirect}"` : (isSubfolder ? `data-subfolder="${subPath}"` : '')} style="margin-top: auto;">${isSubfolder ? 'Enter Chapter' : 'Enter Course'}</button>
+                `;
+                
+                card.addEventListener('click', (e) => {
+                    const hideBtn = e.target.closest('.hide-profile-course-btn');
+                    if (hideBtn) {
+                        e.stopPropagation();
+                        hideBtn.style.backgroundColor = 'var(--accent-danger)';
+                        hideBtn.style.color = 'white';
+                        setTimeout(() => {
+                            const id = hideBtn.dataset.id;
+                            const sub = hideBtn.dataset.subfolder || '';
+                            const identifier = id + (sub ? '|' + sub : '');
+                            let hCourses = JSON.parse(localStorage.getItem('courseflix_hidden_profile_courses')) || [];
+                            if (!hCourses.includes(identifier)) {
+                                hCourses.push(identifier);
+                                localStorage.setItem('courseflix_hidden_profile_courses', JSON.stringify(hCourses));
+                            }
+                            renderFacultyProfile(facultyName);
+                        }, 200);
+                        return;
+                    }
+
+                    const viewEl = document.getElementById('subcourse-view');
+                    viewEl.dataset.origin = 'faculty-view';
+                    const enterBtn = e.target.closest('.enter-course-btn');
+                    if (enterBtn) {
+                        e.stopPropagation();
+                        const id = enterBtn.dataset.id;
+                        const sub = enterBtn.dataset.subfolder;
+                        const hasDeeper = enterBtn.dataset.hasDeeper === 'true';
+                        window.lastViewedFaculty = facultyName;
+                        viewEl.dataset.resumePath = sub || '';
+                        
+                        if (hasDeeper) {
+                            if (sub) renderSubcourseView(id, sub);
+                            else renderSubcourseView(id);
+                        } else {
+                            playLectureFromAnywhere(id, null, 'faculty-view', sub || '');
+                        }
+                        return;
+                    }
+
+                    if (e.target.closest('.thumbnail-placeholder')) {
+                        const tgt = e.target.closest('.thumbnail-placeholder');
+                        const id = tgt.dataset.id;
+                        const sub = tgt.dataset.subfolder;
+                        window.lastViewedFaculty = facultyName;
+                        viewEl.dataset.resumePath = sub || '';
+                        if (sub) renderSubcourseView(id, sub);
+                        else renderSubcourseView(id);
+                    } else {
+                        window.lastViewedFaculty = facultyName;
+                        viewEl.dataset.resumePath = isSubfolder ? (subPath || '') : '';
+                        if (isSubfolder) renderSubcourseView(course.id, subPath);
+                        else renderSubcourseView(course.id);
+                    }
+                });
+                grid.appendChild(card);
+            });
+        }
+
         // --- Init ---
         async function main() {
             if (!window.indexedDB || !window.showDirectoryPicker) { document.body.innerHTML = "<h1>Browser Not Supported</h1><p>Please use a modern browser like Google Chrome or Microsoft Edge that supports the File System Access API and IndexedDB.</p>"; return; }
@@ -5580,6 +6561,564 @@
             } else if (!sessionRestored) {
                 switchView('dashboard-view');
             }
+            // --- Global Search Logic ---
+            const searchInput = document.getElementById('global-search-input');
+            const searchView = document.getElementById('search-results-view');
+            const backBtn = document.getElementById('back-from-search-btn');
+            
+            if (searchInput) {
+                const searchContainer = document.getElementById('search-bar-container');
+                searchInput.addEventListener('focus', () => {
+                    searchContainer.style.borderColor = 'var(--accent-primary)';
+                    searchContainer.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.3)';
+                    searchContainer.style.width = '260px';
+                });
+                searchInput.addEventListener('blur', () => {
+                    searchContainer.style.borderColor = 'var(--border-secondary)';
+                    searchContainer.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
+                    if (!searchInput.value.trim()) {
+                         searchContainer.style.width = '220px';
+                    }
+                });
+
+                backBtn.addEventListener('click', () => {
+                    switchView('dashboard-view');
+                    searchInput.value = '';
+                    if (!searchInput.value.trim() && document.activeElement !== searchInput) {
+                        searchContainer.style.width = '220px';
+                    }
+                });
+
+                window.globalSearchMode = window.globalSearchMode || 'partial';
+                window.globalFacultySearchMode = window.globalFacultySearchMode || false;
+                
+                function performGlobalSearch(query) {
+                    query = query.trim();
+                    // Exclude pure numbers and extremely short queries
+                    if (/^\d+$/.test(query) || query.length < 2) {
+                        return { subjects: [], chapters: [], lectures: [], facultyCourses: [], facultyNameMatch: null };
+                    }
+                    
+                    const qLower = query.toLowerCase();
+                    
+                    let exactRegex = null;
+                    if (window.globalSearchMode === 'exact') {
+                        try {
+                            exactRegex = new RegExp(`\\b${query}\\b`);
+                        } catch(e) {
+                            exactRegex = new RegExp(query); // fallback
+                        }
+                    }
+                    
+                    const checkMatch = (text) => {
+                        if (!text) return false;
+                        if (window.globalSearchMode === 'exact') {
+                            return exactRegex.test(text); // Case sensitive exact match
+                        }
+                        return text.toLowerCase().includes(qLower); // Case insensitive partial match
+                    };
+                    
+                    const matchedSubjects = [];
+                    const matchedChapters = [];
+                    const matchedLectures = [];
+                    const facultyCourses = [];
+                    let facultyNameMatch = null;
+                    
+                    courses.forEach(course => {
+                        let isTitleMatch = checkMatch(course.title);
+                        let isFacultyMatch = checkMatch(course.facultyName);
+                        
+                        if (window.globalFacultySearchMode) {
+                            if (isFacultyMatch) {
+                                matchedSubjects.push({ type: 'subject', course });
+                            }
+                            if (course.subCourseData) {
+                                Object.keys(course.subCourseData).forEach(subPath => {
+                                    if (checkMatch(course.subCourseData[subPath].facultyName)) {
+                                        matchedSubjects.push({ type: 'subfolder', course, subfolder: subPath });
+                                    }
+                                });
+                            }
+                            return; // Only search faculty and show subjects
+                        }
+                        
+                        if (isTitleMatch) {
+                            matchedSubjects.push({ type: 'subject', course });
+                        }
+                        
+                        if (isFacultyMatch) {
+                            facultyNameMatch = course.facultyName;
+                            if (!isTitleMatch) {
+                                facultyCourses.push({ type: 'subject', course });
+                            }
+                        }
+                        
+                        const matchedSubfolderNames = new Set();
+                        course.chapters = course.chapters || [];
+                        course.chapters.forEach(ch => {
+                             if (checkMatch(ch.name)) {
+                                 matchedSubfolderNames.add(ch.name);
+                             }
+                        });
+                        
+                        let facultyMatchedInSubfolder = false;
+                        
+                        if (course.subCourseData) {
+                             Object.keys(course.subCourseData).forEach(subPath => {
+                                 const sd = course.subCourseData[subPath];
+                                 if (checkMatch(sd.customName)) {
+                                     matchedSubfolderNames.add(subPath);
+                                 }
+                                 if (checkMatch(sd.facultyName)) {
+                                     if (!facultyNameMatch) facultyNameMatch = sd.facultyName;
+                                     facultyMatchedInSubfolder = true;
+                                 }
+                             });
+                        }
+                        
+                        if (facultyMatchedInSubfolder && !isFacultyMatch) {
+                             if (!isTitleMatch) { // prevent duplicates if it was already a title match
+                                 // check if it's already in facultyCourses
+                                 if (!facultyCourses.some(fc => fc.course.id === course.id)) {
+                                     facultyCourses.push({ type: 'subject', course });
+                                 }
+                             }
+                        }
+                        
+                        matchedSubfolderNames.forEach(subPath => {
+                             matchedChapters.push({ type: 'subfolder', course, subfolder: subPath });
+                        });
+                        
+                        if (course.lectures) {
+                            course.lectures.forEach(l => {
+                                if (checkMatch(l.chapter) && !matchedSubfolderNames.has(l.chapter)) {
+                                    matchedSubfolderNames.add(l.chapter);
+                                    matchedChapters.push({ type: 'subfolder', course, subfolder: l.chapter });
+                                }
+                                if (checkMatch(l.name)) {
+                                    matchedLectures.push({ course, lecture: l });
+                                }
+                            });
+                        }
+                    });
+                    
+                    // "IF THERE IS ONLY 1 CHAPATER OR SUBJECT THEN SHOW THEM BY DEFAULT ON ROW 1"
+                    if (matchedSubjects.length === 0 && matchedChapters.length === 1) {
+                        matchedSubjects.push(matchedChapters.pop());
+                    }
+                    
+                    return { subjects: matchedSubjects, chapters: matchedChapters, lectures: matchedLectures, facultyCourses, facultyNameMatch };
+                }
+                
+                function renderSearchResults(query) {
+                    const results = performGlobalSearch(query);
+                    
+                    const subjSec = document.getElementById('search-results-subjects-section');
+                    const subjGrid = document.getElementById('search-results-subjects-grid');
+                    const chapSec = document.getElementById('search-results-chapters-section');
+                    const chapGrid = document.getElementById('search-results-chapters-grid');
+                    const lecSec = document.getElementById('search-results-lectures-section');
+                    const lecList = document.getElementById('search-results-lectures-list');
+                    const facSec = document.getElementById('search-results-faculty-section');
+                    const facGrid = document.getElementById('search-results-faculty-grid');
+                    const facTitle = document.getElementById('faculty-section-title');
+                    const noRes = document.getElementById('search-no-results');
+                    const subjTitle = document.getElementById('subject-section-title');
+                    
+                    subjGrid.innerHTML = ''; chapGrid.innerHTML = ''; lecList.innerHTML = ''; facGrid.innerHTML = '';
+                    
+                    let hasResults = false;
+                    let animDelay = 0;
+                    
+                    const createCard = (item) => {
+                            const course = item.course;
+                            const isSubfolder = item.type === 'subfolder';
+                            const subPath = item.subfolder;
+                            
+                            let progress, ratingStarsHTML, titleHTML, cardSubtitle;
+                            
+                            if (isSubfolder) {
+                                const subLectures = course.lectures ? course.lectures.filter(l => l.chapter === subPath || l.chapter.startsWith(subPath + '/')) : [];
+                                const total = subLectures.length;
+                                let completed = 0;
+                                let remainingSecs = 0;
+                                subLectures.forEach(l => {
+                                    const lp = getLectureProgress(course.id, l.id);
+                                    if(lp.completed) completed++;
+                                    else remainingSecs += (l.duration || 0);
+                                });
+                                progress = { completed, total, percentage: total > 0 ? (completed/total)*100 : 0 };
+                                
+                                const subData = (course.subCourseData && course.subCourseData[subPath]) || {};
+                                const rating = subData.rating !== undefined ? subData.rating : (course.rating || 0);
+                                ratingStarsHTML = Array.from({length: 5}, (_, i) => `<i class="fa${i < rating ? 's' : 'r'} fa-star" style="color: ${i < rating ? '#eab308' : 'var(--text-secondary)'};"></i>`).join('');
+                                
+                                const displayTitle = getSubfolderDisplayName(course, subPath);
+                                const badgeText = window.globalFacultySearchMode ? 'Subject' : 'Chapter';
+                                const badgeBg = window.globalFacultySearchMode ? '#8b5cf6' : '#22c55e';
+                                titleHTML = `${displayTitle} <span style="font-size: 0.75rem; font-weight: bold; color: white; background: ${badgeBg}; padding: 2px 8px; border-radius: 12px; margin-left: 8px;">${badgeText}</span>`;
+                                cardSubtitle = `<div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 8px;">
+                                    <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${course.title}</span>
+                                    <span style="display: flex; align-items: center; gap: 4px; background: rgba(59, 130, 246, 0.15); color: #3b82f6; padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; white-space: nowrap; flex-shrink: 0;">
+                                        <i class="far fa-clock"></i> ${Math.ceil(remainingSecs / 3600)} hrs left
+                                    </span>
+                                </div>`;
+                            } else {
+                                progress = calculateCourseProgress(course);
+                                const remainingSecs = progress.remainingDuration || 0;
+                                ratingStarsHTML = Array.from({length: 5}, (_, i) => `<i class="fa${i < (course.rating || 0) ? 's' : 'r'} fa-star" style="color: ${i < (course.rating || 0) ? '#eab308' : 'var(--text-secondary)'};"></i>`).join('');
+                                titleHTML = `${course.title} <span style="font-size: 0.75rem; font-weight: bold; color: white; background: #8b5cf6; padding: 2px 8px; border-radius: 12px; margin-left: 8px;">Subject</span>`;
+                                cardSubtitle = `<div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 8px;">
+                                    <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Course</span>
+                                    <span style="display: flex; align-items: center; gap: 4px; background: rgba(59, 130, 246, 0.15); color: #3b82f6; padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; white-space: nowrap; flex-shrink: 0;">
+                                        <i class="far fa-clock"></i> ${Math.ceil(remainingSecs / 3600)} hrs left
+                                    </span>
+                                </div>`;
+                            }
+                            
+                            const card = document.createElement('div');
+                            card.className = 'course-card search-anim-item';
+                            card.style.animationDelay = `${animDelay}s`;
+                            animDelay += 0.03;
+                            
+                            card.dataset.id = course.id;
+                            
+                            let thumbnailHTML = '<i class="fas fa-book"></i>';
+                            if (isSubfolder && course.subCourseData && course.subCourseData[subPath] && course.subCourseData[subPath].thumbnail) {
+                                 thumbnailHTML = `<img src="${course.subCourseData[subPath].thumbnail}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-book\\'></i>'">`;
+                            } else if (course.thumbnail) {
+                                 thumbnailHTML = `<img src="${course.thumbnail}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-book\\'></i>'">`;
+                            }
+
+                            const facultyNameToDisplay = isSubfolder ? getSubfolderFacultyName(course, subPath) : (course.facultyName || 'N/A Faculty');
+                            
+                            card.innerHTML = `
+                                <div class="thumbnail-placeholder" data-id="${course.id}" ${item.subfolderRedirect ? `data-subfolder="${item.subfolderRedirect}"` : (isSubfolder ? `data-subfolder="${subPath}"` : '')}>
+                                    ${thumbnailHTML}
+                                </div>
+                                <div class="course-info">
+                                    <h3 title="${isSubfolder ? subPath : course.title}" style="display: flex; align-items: center; flex-wrap: wrap; gap: 4px;">${titleHTML}</h3>
+                                    <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 500; width: 100%;">${cardSubtitle}</div>
+                                    <div class="course-extra-info">
+                                        <div class="course-faculty">${facultyNameToDisplay}</div>
+                                        <div class="course-rating" style="pointer-events: none;">${ratingStarsHTML}</div>
+                                    </div>
+                                    <div class="course-progress-container" style="margin-top: auto;">
+                                        <div class="course-progress-bar"><div class="course-progress-fill" style="width: ${progress.percentage}%"></div></div>
+                                        <div class="course-progress-text">${progress.completed} / ${progress.total || course.videoCount || 0} completed</div>
+                                    </div>
+                                </div>
+                                <button class="enter-course-btn" data-id="${course.id}" ${item.subfolderRedirect ? `data-subfolder="${item.subfolderRedirect}"` : (isSubfolder ? `data-subfolder="${subPath}"` : '')} style="margin-top: auto;">${isSubfolder ? 'Enter Chapter' : 'Enter Course'}</button>
+                            `;
+                            return card;
+                    };
+                    
+                    if (results.subjects.length > 0) {
+                        hasResults = true; subjSec.style.display = 'block';
+                        if (window.globalFacultySearchMode) {
+                            subjTitle.textContent = `Subjects taught by "${query}"`;
+                        } else {
+                            subjTitle.textContent = 'Matching Subjects';
+                        }
+                        results.subjects.forEach(item => subjGrid.appendChild(createCard(item)));
+                    } else { subjSec.style.display = 'none'; }
+                    
+                    if (results.chapters.length > 0) {
+                        hasResults = true; chapSec.style.display = 'block';
+                        results.chapters.forEach(item => chapGrid.appendChild(createCard(item)));
+                    } else { chapSec.style.display = 'none'; }
+                    
+                    if (results.facultyCourses.length > 0) {
+                        hasResults = true; facSec.style.display = 'block';
+                        facTitle.textContent = `Other Subjects taught by ${results.facultyNameMatch}`;
+                        results.facultyCourses.forEach(item => facGrid.appendChild(createCard(item)));
+                    } else { facSec.style.display = 'none'; }
+                    
+                    if (results.lectures.length > 0) {
+                        hasResults = true;
+                        lecSec.style.display = 'block';
+                        
+                        const lecTitle = lecSec.querySelector('h2');
+                        if (lecTitle) lecTitle.innerHTML = `${results.lectures.length} Lectures Found`;
+                        
+                        // Group lectures by course + chapter
+                        const groupedLectures = {};
+                        results.lectures.forEach(({course, lecture}) => {
+                             const key = `${course.id}_${lecture.chapter}`;
+                             if (!groupedLectures[key]) {
+                                 groupedLectures[key] = { course, chapter: lecture.chapter, lectures: [] };
+                             }
+                             groupedLectures[key].lectures.push(lecture);
+                        });
+                        
+                        Object.values(groupedLectures).forEach(group => {
+                             const subName = getSubfolderDisplayName(group.course, group.chapter);
+                             
+                             const groupEl = document.createElement('div');
+                             groupEl.className = 'search-lecture-group search-anim-item';
+                             groupEl.style.animationDelay = `${animDelay}s`;
+                             animDelay += 0.03;
+                             groupEl.style.cssText = 'background: var(--bg-secondary); border: 1px solid var(--border-secondary); border-radius: 8px; overflow: hidden; margin-bottom: 12px;';
+                             
+                             const headerEl = document.createElement('div');
+                             headerEl.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; cursor: pointer; background: var(--bg-tertiary);';
+                             
+                             headerEl.innerHTML = `
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="font-size: 1.2rem; color: var(--accent-primary);"><i class="fas fa-folder-open"></i></div>
+                                    <div style="display: flex; flex-direction: column;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="color: var(--text-primary); font-weight: 600; font-size: 1rem;">${subName}</span>
+                                            <span style="font-size: 0.7rem; font-weight: bold; color: white; background: #22c55e; padding: 2px 8px; border-radius: 12px;">Chapter</span>
+                                        </div>
+                                        <span style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 2px;">${group.course.title} • ${getSubfolderFacultyName(group.course, group.chapter)} • ${group.lectures.length} matching lecture${group.lectures.length > 1 ? 's' : ''}</span>
+                                    </div>
+                                </div>
+                                <div style="color: var(--text-secondary); transition: transform 0.3s;"><i class="fas fa-chevron-down"></i></div>
+                             `;
+                             
+                             const listContainer = document.createElement('div');
+                             listContainer.style.cssText = 'display: none; flex-direction: column; padding: 8px 16px; border-top: 1px solid var(--border-secondary); background: var(--bg-secondary);';
+                             
+                             group.lectures.forEach(lecture => {
+                                 const progress = getLectureProgress(group.course.id, lecture.id);
+                                 const completed = progress.completed ? '<i class="fas fa-check-circle" style="color: #22c55e;"></i>' : '<i class="far fa-circle" style="color: var(--text-secondary);"></i>';
+                                 
+                                 const lItem = document.createElement('div');
+                                 lItem.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-primary); cursor: pointer;';
+                                 lItem.innerHTML = `
+                                    <div style="display: flex; align-items: center; gap: 12px; overflow: hidden; width: 100%;">
+                                        <div style="font-size: 1.1rem; flex-shrink: 0;">${completed}</div>
+                                        <div style="display: flex; align-items: center; gap: 8px; flex-grow: 1; overflow: hidden;">
+                                            <span style="color: var(--text-primary); font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${lecture.name}</span>
+                                            <span style="font-size: 0.7rem; font-weight: bold; color: white; background: #3b82f6; padding: 2px 8px; border-radius: 12px; flex-shrink: 0;">Lecture</span>
+                                        </div>
+                                    </div>
+                                    <button class="icon-btn" style="color: var(--accent-primary); flex-shrink: 0; transform: scale(0.85);"><i class="fas fa-play"></i></button>
+                                 `;
+                                 
+                                 if (lecture === group.lectures[group.lectures.length - 1]) lItem.style.borderBottom = 'none';
+                                 
+                                 lItem.addEventListener('mouseover', () => lItem.querySelector('.icon-btn').style.background = 'var(--bg-tertiary)');
+                                 lItem.addEventListener('mouseout', () => lItem.querySelector('.icon-btn').style.background = 'transparent');
+                                 
+                                 lItem.addEventListener('click', () => {
+                                    playLectureFromAnywhere(group.course.id, lecture.id, 'search-results-view', lecture.chapter);
+                                 });
+                                 listContainer.appendChild(lItem);
+                             });
+                             
+                             let isOpen = false;
+                             headerEl.addEventListener('click', () => {
+                                 isOpen = !isOpen;
+                                 if (isOpen) {
+                                     listContainer.style.display = 'flex';
+                                     headerEl.querySelector('.fa-chevron-down').parentElement.style.transform = 'rotate(180deg)';
+                                 } else {
+                                     listContainer.style.display = 'none';
+                                     headerEl.querySelector('.fa-chevron-down').parentElement.style.transform = 'rotate(0deg)';
+                                 }
+                             });
+                             
+                             groupEl.appendChild(headerEl);
+                             groupEl.appendChild(listContainer);
+                             lecList.appendChild(groupEl);
+                        });
+                    } else {
+                        lecSec.style.display = 'none';
+                    }
+                    
+                    if (hasResults) {
+                        noRes.style.display = 'none';
+                        
+                        // Handle Jump Bar Logic
+                        setTimeout(() => {
+                            const searchView = document.getElementById('search-results-view');
+                            const jumpBar = document.getElementById('search-jump-bar');
+                            const btnLectures = document.getElementById('jump-to-lectures');
+                            const btnChapters = document.getElementById('jump-to-chapters');
+                            const btnSubjects = document.getElementById('jump-to-subjects');
+
+                            if (!searchView || !jumpBar) return;
+
+                            // Show buttons if their respective sections have results
+                            const hasLec = results.lectures && results.lectures.length > 0;
+                            const hasChap = results.chapters && results.chapters.length > 0;
+                            const hasSubj = results.subjects && results.subjects.length > 0;
+                            
+                            btnLectures.style.display = hasLec ? 'block' : 'none';
+                            btnChapters.style.display = hasChap ? 'block' : 'none';
+                            btnSubjects.style.display = hasSubj ? 'block' : 'none';
+
+                            // Check if scroll is needed
+                            // We compare scrollHeight to clientHeight to see if content overflows
+                            // We also ensure there's more than one section, otherwise jumping is pointless
+                            let sectionsCount = (hasLec ? 1 : 0) + (hasChap ? 1 : 0) + (hasSubj ? 1 : 0);
+                            
+                            if (searchView.scrollHeight > searchView.clientHeight && sectionsCount > 1) {
+                                jumpBar.style.display = 'flex';
+                            } else {
+                                jumpBar.style.display = 'none';
+                            }
+                        }, 50); // Small delay to let the DOM paint and calculate heights accurately
+                    } else {
+                        noRes.style.display = 'block';
+                        const jumpBar = document.getElementById('search-jump-bar');
+                        if (jumpBar) jumpBar.style.display = 'none';
+                    }
+                }
+                
+                let searchTimeout;
+                const searchResultsInput = document.getElementById('search-results-input');
+                const btnPartial = document.getElementById('search-mode-partial');
+                const btnExact = document.getElementById('search-mode-exact');
+                const btnFaculty = document.getElementById('search-mode-faculty');
+
+                function updateSearchModeUI() {
+                    if (window.globalSearchMode === 'partial') {
+                        btnPartial.style.background = 'var(--accent-primary)';
+                        btnPartial.style.color = 'white';
+                        btnPartial.style.border = '1px solid var(--accent-primary)';
+                        
+                        btnExact.style.background = 'transparent';
+                        btnExact.style.color = 'var(--text-secondary)';
+                        btnExact.style.border = '1px solid var(--border-secondary)';
+                    } else {
+                        btnExact.style.background = 'var(--accent-primary)';
+                        btnExact.style.color = 'white';
+                        btnExact.style.border = '1px solid var(--accent-primary)';
+                        
+                        btnPartial.style.background = 'transparent';
+                        btnPartial.style.color = 'var(--text-secondary)';
+                        btnPartial.style.border = '1px solid var(--border-secondary)';
+                    }
+                    
+                    if (window.globalFacultySearchMode) {
+                        btnFaculty.style.background = 'var(--accent-primary)';
+                        btnFaculty.style.color = 'white';
+                        btnFaculty.style.borderColor = 'var(--accent-primary)';
+                        searchResultsInput.placeholder = 'Search by Teacher Name...';
+                    } else {
+                        btnFaculty.style.background = 'var(--bg-tertiary)';
+                        btnFaculty.style.color = 'var(--text-secondary)';
+                        btnFaculty.style.borderColor = 'transparent';
+                        searchResultsInput.placeholder = 'Search courses, chapters, or videos...';
+                    }
+                    
+                    if (searchResultsInput && searchResultsInput.value) renderSearchResults(searchResultsInput.value);
+                }
+
+                if (btnPartial) btnPartial.addEventListener('click', () => { window.globalSearchMode = 'partial'; updateSearchModeUI(); });
+                if (btnExact) btnExact.addEventListener('click', () => { window.globalSearchMode = 'exact'; updateSearchModeUI(); });
+                if (btnFaculty) btnFaculty.addEventListener('click', () => { window.globalFacultySearchMode = !window.globalFacultySearchMode; updateSearchModeUI(); });
+                
+                // Jump Bar Event Listeners
+                const btnJumpLec = document.getElementById('jump-to-lectures');
+                const btnJumpChap = document.getElementById('jump-to-chapters');
+                const btnJumpSubj = document.getElementById('jump-to-subjects');
+                
+                let currentActiveJumpBtn = null;
+                
+                function setActiveJumpBtn(btnId) {
+                    currentActiveJumpBtn = btnId;
+                    document.querySelectorAll('.jump-btn').forEach(b => {
+                        if (b.id === btnId) {
+                            b.style.background = 'var(--accent-primary)';
+                            b.style.color = 'white';
+                            b.style.borderColor = 'var(--accent-primary)';
+                        } else {
+                            b.style.background = 'var(--bg-tertiary)';
+                            b.style.color = 'var(--text-primary)';
+                            b.style.borderColor = 'var(--border-primary)';
+                        }
+                    });
+                }
+                
+                function customScrollToSection(sectionId, btnId) {
+                    const sec = document.getElementById(sectionId);
+                    const container = document.getElementById('search-results-view');
+                    if (sec && container) {
+                        setActiveJumpBtn(btnId);
+                        
+                        // The sticky header height is roughly 140px. 
+                        // Using offsetTop directly avoids the `scrollIntoView` bug that scrolls the entire page body.
+                        const stickyHeader = container.firstElementChild;
+                        const headerOffset = stickyHeader ? stickyHeader.offsetHeight : 140;
+                        
+                        container.scrollTo({
+                            top: sec.offsetTop - headerOffset - 20, // 20px extra padding
+                            behavior: 'smooth'
+                        });
+                    }
+                }
+
+                if (btnJumpLec) btnJumpLec.addEventListener('click', () => customScrollToSection('search-results-lectures-section', 'jump-to-lectures'));
+                if (btnJumpChap) btnJumpChap.addEventListener('click', () => customScrollToSection('search-results-chapters-section', 'jump-to-chapters'));
+                if (btnJumpSubj) btnJumpSubj.addEventListener('click', () => customScrollToSection('search-results-subjects-section', 'jump-to-subjects'));
+
+                // Add hover effects for jump buttons
+                document.querySelectorAll('.jump-btn').forEach(btn => {
+                    btn.addEventListener('mouseover', () => {
+                        if (currentActiveJumpBtn === btn.id) return;
+                        btn.style.background = 'var(--accent-primary)';
+                        btn.style.color = 'white';
+                        btn.style.borderColor = 'var(--accent-primary)';
+                    });
+                    btn.addEventListener('mouseout', () => {
+                        if (currentActiveJumpBtn === btn.id) return;
+                        btn.style.background = 'var(--bg-tertiary)';
+                        btn.style.color = 'var(--text-primary)';
+                        btn.style.borderColor = 'var(--border-primary)';
+                    });
+                });
+
+                // Initialize default UI state
+                updateSearchModeUI();
+
+                function handleSearchInput(query, sourceInput) {
+                    // Sync inputs
+                    if (sourceInput === searchInput && searchResultsInput) searchResultsInput.value = query;
+                    if (sourceInput === searchResultsInput && searchInput) searchInput.value = query;
+
+                    if (/^\d+$/.test(query) || query.length < 2) {
+                        if (document.querySelector('.view.active').id === 'search-results-view') {
+                             switchView('dashboard-view');
+                             // Transfer focus back to the global search input so the user doesn't lose focus
+                             setTimeout(() => {
+                                 if (searchInput) searchInput.focus();
+                             }, 50);
+                        }
+                        return;
+                    }
+                    
+                    if (document.querySelector('.view.active').id !== 'search-results-view') {
+                        switchView('search-results-view');
+                    }
+                    
+                    // Focus the big search bar if it just opened
+                    if (sourceInput === searchInput && searchResultsInput && document.activeElement !== searchResultsInput) {
+                        setTimeout(() => searchResultsInput.focus(), 50);
+                    }
+                    
+                    renderSearchResults(query);
+                }
+
+                searchInput.addEventListener('input', (e) => {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        handleSearchInput(e.target.value.trim(), searchInput);
+                    }, 300);
+                });
+
+                if (searchResultsInput) {
+                    searchResultsInput.addEventListener('input', (e) => {
+                        clearTimeout(searchTimeout);
+                        searchTimeout = setTimeout(() => {
+                            handleSearchInput(e.target.value.trim(), searchResultsInput);
+                        }, 300);
+                    });
+                }
+            }
         }
         main().catch(err => {
             console.error('CourseFlix init error:', err);
@@ -5601,3 +7140,4 @@
     </script>
 </body>
 </html>
+
