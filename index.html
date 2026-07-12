@@ -5916,10 +5916,12 @@
                         }
                         
                         let matchedSub = null;
-                        for (const subName in course.subCourseData) {
-                            if (lecture.chapter === subName || lecture.chapter.startsWith(subName + '/')) {
-                                matchedSub = subName;
-                                break;
+                        if (course.subCourseData) {
+                            for (const subName in course.subCourseData) {
+                                if (lecture.chapter === subName || lecture.chapter.startsWith(subName + '/')) {
+                                    matchedSub = subName;
+                                    break;
+                                }
                             }
                         }
                         
@@ -5927,7 +5929,7 @@
                         
                         if (!subfolderStats[effectiveSub]) {
                             let fName = course.facultyName || 'Unknown';
-                            if (course.subCourseData[effectiveSub] && course.subCourseData[effectiveSub].facultyName) {
+                            if (course.subCourseData && course.subCourseData[effectiveSub] && course.subCourseData[effectiveSub].facultyName) {
                                 fName = course.subCourseData[effectiveSub].facultyName;
                             }
                             subfolderStats[effectiveSub] = { totalLecs: 0, totalDur: 0, watchedDur: 0, watchedLecs: 0, facultyName: fName };
