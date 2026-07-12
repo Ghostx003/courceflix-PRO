@@ -178,7 +178,6 @@
         .lecture-review-card {
             background-color: var(--bg-secondary); border-radius: 10px; border: 1px solid var(--border-primary); padding: 16px;
             display: flex; flex-direction: column; justify-content: space-between; position: relative; cursor: pointer; overflow: hidden; min-height: 220px;
-            background-image: url('lect.webp'); background-size: cover; background-position: center;
         }
         .lecture-review-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.6); border-radius: 10px; z-index: 1; }
         .lecture-review-info, .card-action-center, .remove-status-btn { position: relative; z-index: 2; }
@@ -1267,6 +1266,7 @@
         let currentSubfolder = null; // Track current subfolder path to properly scope the player
         let currentLectureLi = null;
         let courseProgress = {};
+        let cachedHistory = null;
         let clickTimer = null;
         let lastView = 'dashboard-view';
         let activeFileUrl = null;
@@ -1424,6 +1424,7 @@
         }
 
         async function addHistoryEntry(courseId, lectureId, courseTitle, lectureName, duration, subfolder, thumbnail) {
+            cachedHistory = null;
             const entry = {
                 courseId, lectureId, courseTitle, lectureName, duration, subfolder, thumbnail,
                 timestamp: new Date().toISOString()
@@ -1436,14 +1437,19 @@
         }
         
         async function getHistoryEntries() {
+            if (cachedHistory) return cachedHistory;
             return new Promise((resolve, reject) => {
                 const request = getStore(HISTORY_STORE, 'readonly').getAll();
-                request.onsuccess = () => resolve(request.result);
+                request.onsuccess = () => {
+                    cachedHistory = request.result;
+                    resolve(cachedHistory);
+                };
                 request.onerror = reject;
             });
         }
 
         async function hideWatchHistoryEntry(id) {
+            cachedHistory = null;
             return new Promise((resolve, reject) => {
                 const store = getStore(HISTORY_STORE, 'readwrite');
                 store.get(id).onsuccess = (e) => {
@@ -1461,6 +1467,7 @@
         }
         
         async function clearWatchHistory() {
+            cachedHistory = null;
             const history = await getHistoryEntries();
             const store = getStore(HISTORY_STORE, 'readwrite');
             return Promise.all(history.map(h => {
@@ -1475,6 +1482,7 @@
         }
 
         async function clearContinueHistory() {
+            cachedHistory = null;
             const history = await getHistoryEntries();
             const store = getStore(HISTORY_STORE, 'readwrite');
             return Promise.all(history.map(h => {
@@ -1489,6 +1497,7 @@
         }
         
         async function hideContinueHistoryByCourseSubfolder(courseId, subfolder) {
+            cachedHistory = null;
             const history = await getHistoryEntries();
             const toHide = history.filter(h => h.courseId === courseId && (h.subfolder || '') === subfolder);
             const store = getStore(HISTORY_STORE, 'readwrite');
@@ -1687,22 +1696,24 @@
             views.forEach(view => view.classList.toggle('active', view.id === targetId));
             navLinks.forEach(link => link.classList.toggle('active', link.dataset.view === viewId));
             
-            if (viewId === 'review-view' || viewId === 'practice-view') {
-                renderStatusGrid(viewId.split('-')[0]);
-            }
-            if (viewId === 'dashboard-view') renderCourseGrid();
-            if (viewId === 'upload-view') {
-                 document.getElementById('upload-course-grid').classList.remove('hidden');
-                 document.getElementById('upload-subfolder-view').classList.add('hidden');
-                 document.getElementById('upload-detail-view').classList.add('hidden');
-                 renderUploadView();
-            }
-            if (viewId === 'dpp-view') renderDppCourseSelectionView();
-            if (viewId === 'notes-view') renderNotesCourseSelectionView();
-            if (viewId === 'doubts-view') renderDoubtsCourseSelectionView();
-            if (viewId === 'continue-view') renderContinueView();
-            if (viewId === 'history-view') renderHistoryView();
-            if (viewId === 'faculty-view') renderFacultyView();
+            setTimeout(() => {
+                if (viewId === 'review-view' || viewId === 'practice-view') {
+                    renderStatusGrid(viewId.split('-')[0]);
+                }
+                if (viewId === 'dashboard-view') renderCourseGrid();
+                if (viewId === 'upload-view') {
+                     document.getElementById('upload-course-grid').classList.remove('hidden');
+                     document.getElementById('upload-subfolder-view').classList.add('hidden');
+                     document.getElementById('upload-detail-view').classList.add('hidden');
+                     renderUploadView();
+                }
+                if (viewId === 'dpp-view') renderDppCourseSelectionView();
+                if (viewId === 'notes-view') renderNotesCourseSelectionView();
+                if (viewId === 'doubts-view') renderDoubtsCourseSelectionView();
+                if (viewId === 'continue-view') renderContinueView();
+                if (viewId === 'history-view') renderHistoryView();
+                if (viewId === 'faculty-view') renderFacultyView();
+            }, 10);
             
             if (viewId !== 'player-view') {
                 sessionStorage.removeItem('courseflixState');
@@ -3004,11 +3015,12 @@
                 if(!course) return;
 
                 const isFromSearch = e.target.closest('#search-results-view') !== null;
+                const isFromSubcourse = e.target.closest('#subcourse-view') !== null;
                 const viewEl = document.getElementById('subcourse-view');
                 if (isFromSearch) {
                     viewEl.dataset.origin = 'search-results-view';
                     viewEl.dataset.resumePath = subfolder || '';
-                } else {
+                } else if (!isFromSubcourse) {
                     viewEl.dataset.origin = 'dashboard-view';
                     delete viewEl.dataset.resumePath;
                 }
@@ -3583,10 +3595,11 @@
             } else if (targetView === 'search-results-view') {
                 switchView(targetView);
             } else if (targetView === 'dashboard-view' || targetView === 'continue-view') {
-                if (window.history.length > 1) {
-                    window.history.back();
-                } else {
-                    switchView(targetView);
+                switchView(targetView);
+            } else if (targetView === 'doubts-detail-view') {
+                switchView('doubts-view');
+                if (currentCourse) {
+                    renderDoubtsDetailView(currentCourse.id, currentSubfolder);
                 }
             } else {
                 switchView(targetView);
@@ -4452,6 +4465,15 @@
         });
         
         document.addEventListener('keydown', (e) => { 
+            const doubtOverlay = document.getElementById('doubt-full-overlay');
+            if (doubtOverlay && !doubtOverlay.classList.contains('hidden')) {
+                if (e.key === 'Escape') {
+                    doubtOverlay.classList.add('hidden');
+                    if (typeof activeDoubtId !== 'undefined') activeDoubtId = null;
+                }
+                return;
+            }
+
             const activeModal = document.querySelector('.modal-overlay:not(.hidden)');
             if (activeModal) {
                  if (e.key === 'Escape') {
@@ -5400,6 +5422,7 @@
                 }
                 // (last_studied is already the default from the earlier timestamp sort)
 
+                let htmlStr = '';
                 for (const h of courseList) {
                     const course = h._course;
                     const progress = h._progress;
@@ -5451,9 +5474,8 @@
                     const formattedDate = lastStudiedDate.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
                     const timeRemainingHrs = Math.ceil((progress.remainingDuration || 0) / 3600);
                     
-                    const card = document.createElement('div');
-                    card.className = 'course-card';
-                    card.innerHTML = `
+                    htmlStr += `
+                    <div class="course-card">
                         <div class="thumbnail-placeholder ${cardThumbnail ? 'has-thumbnail' : ''}" style="${cardThumbnail ? `background-image: url('${cardThumbnail}')` : ''}">
                             <i class="fas fa-history" style="font-size: 3rem;"></i>
                         </div>
@@ -5474,9 +5496,10 @@
                             </div>
                             <button class="primary-btn history-continue-btn" data-course="${course.id}" data-lecture="${h.lectureId}" data-subfolder="${h.subfolder || ''}" style="margin-top: auto; font-size:1rem; padding:12px;">Resume</button>
                         </div>
+                    </div>
                     `;
-                    continueGrid.appendChild(card);
                 }
+                continueGrid.innerHTML = htmlStr;
             }
         }
 
@@ -5494,10 +5517,10 @@
             if (weekHistory.length === 0) {
                 tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--text-secondary);">No history found for the last 7 days.</td></tr>';
             } else {
+                let htmlStr = '';
                 weekHistory.forEach(h => {
-                    const row = document.createElement('tr');
-                    row.style.borderBottom = '1px solid var(--border-secondary)';
-                    row.innerHTML = `
+                    htmlStr += `
+                    <tr style="border-bottom: 1px solid var(--border-secondary);">
                         <td style="padding: 12px 16px; display: flex; align-items: center; gap: 10px;">
                             ${h.thumbnail ? `<img src="${h.thumbnail}" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;">` : `<div style="width: 40px; height: 40px; background: var(--bg-tertiary); border-radius: 4px; display: flex; align-items: center; justify-content: center;"><i class="fas fa-video"></i></div>`}
                             <span>${h.courseTitle}</span>
@@ -5510,9 +5533,10 @@
                         <td style="padding: 12px 16px; text-align: right;">
                             <button class="delete-history-btn" data-id="${h.id}" style="background: none; border: none; color: var(--accent-danger); cursor: pointer; padding: 4px;"><i class="fas fa-times"></i></button>
                         </td>
+                    </tr>
                     `;
-                    tableBody.appendChild(row);
                 });
+                tableBody.innerHTML = htmlStr;
             }
         }
 
