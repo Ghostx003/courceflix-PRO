@@ -2473,6 +2473,8 @@
                 } else {
                     backToLibraryBtn.textContent = currentSubfolder ? '← Back to Folder' : '← Back to Course';
                 }
+            } else if (originView === 'progress-doubts') {
+                backToLibraryBtn.textContent = '← Back to Doubts';
             } else {
                 const statusName = originView.split('-')[0];
                 backToLibraryBtn.textContent = `← Back to ${statusName.charAt(0).toUpperCase() + statusName.slice(1)}`;
@@ -2485,7 +2487,7 @@
                 chaptersToDisplay = chaptersToDisplay.filter(ch => ch.name === subfolder || ch.name.startsWith(subfolder + '/'));
                 courseTitleMenu.textContent = `${currentCourse.title} - ${getSubfolderDisplayName(currentCourse, subfolder)}`;
                 // Only set back view to subcourse-view if we didn't come from doubts, continue, history, or search (preserve those origins)
-                if (originView !== 'doubts-detail-view' && originView !== 'continue-view' && originView !== 'history-view' && originView !== 'search-results-view') {
+                if (originView !== 'doubts-detail-view' && originView !== 'continue-view' && originView !== 'history-view' && originView !== 'search-results-view' && originView !== 'progress-doubts') {
                     backToLibraryBtn.dataset.view = 'subcourse-view';
                 }
                 backToLibraryBtn.dataset.subfolder = subfolder;
@@ -3587,7 +3589,10 @@
                 return;
             }
             const targetView = backToLibraryBtn.dataset.view || 'dashboard-view';
-            if (targetView === 'subcourse-view') {
+            if (targetView === 'progress-doubts') {
+                window.location.href = 'progress.html#doubt-dashboard';
+                return;
+            } else if (targetView === 'subcourse-view') {
                 const path = currentSubfolder ? getParentPath(currentSubfolder) : '';
                 renderSubcourseView(currentCourse.id, path);
             } else if (targetView.includes('review') || targetView.includes('practice')) {
@@ -4274,6 +4279,17 @@
         videoPlayer.addEventListener('play', () => playPauseBtn.innerHTML = `<i class="fas fa-pause"></i>`);
         videoPlayer.addEventListener('pause', () => playPauseBtn.innerHTML = `<i class="fas fa-play"></i>`);
         videoWrapper.addEventListener('click', (e) => { if (e.target.closest('.video-controls-container') || e.target.closest('#unmute-btn') || e.target.closest('.bookmark-dot')) return; if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; } clickTimer = setTimeout(() => { if (!e.target.closest('#media-viewer')) playPauseBtn.click(); }, 250); });
+        videoWrapper.addEventListener('auxclick', (e) => {
+            if (e.button === 1 && !e.target.closest('.video-controls-container') && !e.target.closest('#media-viewer')) {
+                e.preventDefault();
+                playPauseBtn.click();
+            }
+        });
+        videoWrapper.addEventListener('mousedown', (e) => {
+            if (e.button === 1 && !e.target.closest('.video-controls-container') && !e.target.closest('#media-viewer')) {
+                e.preventDefault();
+            }
+        });
         videoWrapper.addEventListener('dblclick', (e) => { if (e.target.closest('.video-controls-container') || e.target.closest('#media-viewer')) return; clearTimeout(clickTimer); clickTimer = null; const r=videoWrapper.getBoundingClientRect(),c=e.clientX-r.left;if(c<r.width/2){videoPlayer.currentTime-=10;showSeekIcon(leftSeekOverlay)}else{videoPlayer.currentTime+=10;showSeekIcon(rightSeekOverlay)}});
         videoWrapper.addEventListener('wheel', (e) => {
             if (e.target.closest('.video-controls-container') || e.target.closest('#media-viewer')) return;
@@ -4498,7 +4514,9 @@
             unmuteBtn.classList.add('hidden'); 
 
             let shouldPreventDefault = true;
-            switch(e.key) { 
+            let key = e.key;
+            if (key.length === 1) key = key.toLowerCase();
+            switch(key) { 
                 case ' ': if (view.id === 'player-view') playPauseBtn.click(); break;
                 case 'c': 
                     if (view.id === 'player-view') {
@@ -4550,10 +4568,11 @@
                         document.getElementById('dpp-sidebar-toggle-btn').click();
                     } else if (view.id === 'notes-view' && !document.getElementById('notes-sidebar').classList.contains('hidden')) {
                         document.getElementById('notes-sidebar-toggle-btn').click();
+                    } else {
+                        switchView('dashboard-view');
                     }
                     break; 
                 case 'b': if (view.id === 'player-view') addBookmark(); break;
-                case 'c': if (view.id === 'player-view') clearCurrentVideoBookmarks(); break;
                 default: shouldPreventDefault = false; break;
             } 
             if (shouldPreventDefault) e.preventDefault();
