@@ -249,9 +249,15 @@
         .drop-zone p { margin: 0; font-size: 0.9rem; }
 
         /* --- PLAYER VIEW --- */
-        #player-view { flex-direction: row; --viewer-width: 0px; }
+        #player-view { flex-direction: row; --viewer-width: 0px; --notes-width: 350px; }
         .player-content-wrapper { flex-grow: 1; display: flex; position: relative; width: calc(100% - 380px); transition: width 0.3s ease-in-out; }
         #player-view.viewer-active .player-content-wrapper { width: calc(100% - 380px - var(--viewer-width)); }
+        #player-view.notes-active .player-content-wrapper { width: calc(100% - 380px - var(--notes-width)); }
+        .notes-format-btn { background: transparent; border: none; color: #a0a0b0; border-radius: 4px; padding: 6px 10px; cursor: pointer; transition: all 0.2s ease; font-size: 0.95rem; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        .notes-format-btn:hover { background: rgba(255,255,255,0.1); color: #ffffff; }
+        .notes-format-btn.active { color: var(--accent-primary); background: rgba(22, 163, 74, 0.15); }
+        #player-notes-editor::selection { background-color: var(--accent-primary_translucent); color: inherit; }
+        #player-notes-editor *::selection { background-color: var(--accent-primary_translucent); color: inherit; }
         #lecture-menu { width:380px; background-color:var(--bg-secondary); border-right:1px solid var(--border-primary); flex-shrink:0; display:flex; flex-direction:column; transition:margin-left 0.3s ease; }
         #lecture-menu.hidden { margin-left:-380px; }
         .menu-header { padding:20px; border-bottom:1px solid var(--border-primary); background-color: var(--bg-primary); flex-shrink: 0; }
@@ -269,6 +275,8 @@
         .chapter.dragging { opacity: 0.5; background: var(--bg-tertiary); }
         .chapter-drop-indicator { height: 2px; background-color: var(--accent-primary); margin: -1px 0; }
         .chapter-title i { transition: transform 0.2s; }
+        #chapter-list.hide-completed-lectures li:has(.lecture-checkbox.completed) { display: none !important; }
+        #chapter-list.hide-completed-lectures .chapter:not(:has(li:not(:has(.lecture-checkbox.completed)))) { display: none !important; }
         .chapter.open > .chapter-title i:not(.chapter-drag-handle) { transform: rotate(90deg); }
         .lecture-list { list-style:none; padding-left: 20px; margin: 0; display: none; }
         .chapter.open > .lecture-list { display: block; }
@@ -339,11 +347,16 @@
         #bookmarks-container { position: absolute; top: 0; left: 0; right: 0; height: 100%; pointer-events: none; }
         .bookmark-dot {
             position: absolute; top: 50%; transform: translate(-50%, -50%);
-            width: 12px; height: 12px; background-color: #f59e0b;
-            border: 2px solid white; border-radius: 50%; cursor: pointer;
-            pointer-events: all; z-index: 10; transition: transform 0.2s;
+            color: #f59e0b; font-size: 14px; cursor: pointer;
+            pointer-events: all; z-index: 10; transition: transform 0.2s; text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+            display: flex; align-items: center; justify-content: center;
         }
         .bookmark-dot:hover { transform: translate(-50%, -50%) scale(1.4); }
+        
+        #notes-editor[placeholder]:empty:before { content: attr(placeholder); color: var(--text-secondary); cursor: text; }
+        .timestamp-link { color: var(--accent-primary); cursor: pointer; text-decoration: underline; font-weight: 500; padding: 2px 4px; background: var(--bg-tertiary); border-radius: 4px; }
+        .timestamp-link:hover { color: var(--accent-hover); background: var(--border-primary); }
+        #notes-editor img { max-width: 100%; border-radius: 8px; margin-top: 8px; border: 1px solid var(--border-secondary); }
 
         /* --- AUTOPLAY NEXT OVERLAY --- */
         #autoplay-overlay {
@@ -395,6 +408,42 @@
         .file-btn { background: none; border: none; color: var(--text-secondary); cursor: pointer; width: 24px; height: 24px; font-size: 1rem; display: flex; align-items: center; justify-content: center; position: relative; }
         .file-btn:hover { color: var(--accent-primary); }
         #add-pdf-input, #add-assignment-input { display: none; }
+        
+        /* --- INTELL VIEW --- */
+        #intell-view { padding: 24px; overflow-y: auto; background: var(--bg-primary); }
+        .intell-header { margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; }
+        .intell-search-container { display: flex; align-items: center; background: var(--bg-secondary); border: 1px solid var(--border-primary); border-radius: 8px; padding: 10px 16px; max-width: 400px; width: 100%; box-shadow: var(--shadow); }
+        .intell-search-container input { flex-grow: 1; background: transparent; border: none; color: var(--text-primary); font-size: 0.95rem; outline: none; margin-left: 10px; }
+        .intell-breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 24px; font-weight: 500; }
+        .intell-breadcrumb a { color: var(--accent-primary); text-decoration: none; cursor: pointer; transition: color 0.2s; }
+        .intell-breadcrumb a:hover { color: var(--accent-hover); text-decoration: underline; }
+        
+        /* Level 1: Course Grid */
+        #intell-course-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        .intell-course-square { aspect-ratio: 1; position: relative; border-radius: 12px; overflow: hidden; cursor: pointer; border: 1px solid var(--border-primary); box-shadow: var(--shadow); transition: transform 0.2s, box-shadow 0.2s; }
+        .intell-course-square:hover { transform: translateY(-4px); box-shadow: 0 8px 16px rgba(0,0,0,0.4); border-color: var(--accent-primary); }
+        .intell-course-square img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+        .intell-course-square:hover img { transform: scale(1.05); }
+        .intell-course-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.1) 100%); display: flex; flex-direction: column; justify-content: flex-end; padding: 16px; pointer-events: none; }
+        .intell-course-title { color: white; font-size: 1.1rem; font-weight: 700; margin: 0 0 4px 0; text-shadow: 0 2px 4px rgba(0,0,0,0.8); line-height: 1.3; }
+        .intell-course-teacher { color: #ccc; font-size: 0.85rem; margin: 0; font-weight: 500; }
+        
+        /* Level 2: Lecture List */
+        #intell-lecture-list { display: flex; flex-direction: column; gap: 12px; }
+        .intell-lecture-row { display: flex; align-items: center; justify-content: space-between; background: var(--bg-secondary); padding: 16px 20px; border-radius: 8px; border: 1px solid var(--border-primary); cursor: pointer; transition: all 0.2s; }
+        .intell-lecture-row:hover { background: var(--bg-tertiary); border-color: var(--accent-primary); transform: translateX(4px); }
+        .intell-lecture-row-title { font-weight: 600; font-size: 1.05rem; color: var(--text-primary); margin-bottom: 4px; }
+        .intell-lecture-row-folder { font-size: 0.85rem; color: var(--text-secondary); }
+        
+        /* Level 3: Full Note View */
+        #intell-full-note-view { background: var(--bg-secondary); border-radius: 12px; border: 1px solid var(--border-primary); overflow: hidden; display: flex; flex-direction: column; }
+        .intell-full-note-header { background: var(--bg-tertiary); padding: 20px 24px; border-bottom: 1px solid var(--border-primary); display: flex; justify-content: space-between; align-items: flex-start; }
+        .intell-full-note-header h2 { margin: 0 0 8px 0; font-size: 1.4rem; color: var(--text-primary); line-height: 1.3; }
+        .intell-full-note-header p { margin: 0; color: var(--text-secondary); font-size: 0.9rem; }
+        .intell-full-note-content { padding: 32px 24px; font-size: 1.05rem; line-height: 1.6; color: var(--text-primary); max-width: 800px; margin: 0 auto; width: 100%; min-height: 400px; }
+        .intell-full-note-content h1, .intell-full-note-content h2, .intell-full-note-content h3 { margin-top: 1.5em; margin-bottom: 0.5em; }
+        .intell-jump-btn { background: var(--accent-primary_translucent); color: var(--accent-primary); border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; font-weight: 600; transition: background 0.2s; text-decoration: none; display: inline-block; white-space: nowrap; flex-shrink: 0; margin-left: 16px; }
+        .intell-jump-btn:hover { background: var(--accent-primary); color: white; }
         
         /* --- DPP & NOTES VIEW --- */
         #dpp-view, #notes-view { flex-direction: column; }
@@ -675,8 +724,10 @@
             <a href="#" class="nav-link" data-view="practice-view">Practice</a>
             <a href="#" class="nav-link" data-view="dpp-view">DPP</a>
             <a href="#" class="nav-link" data-view="notes-view">Notes</a>
+            <a href="#" class="nav-link" data-view="intell-view" style="color: var(--accent-primary);"><i class="fas fa-brain" style="margin-right: 4px;"></i> Intell</a>
             <a href="#" class="nav-link" data-view="doubts-view">Doubts</a>
             <a href="#" class="nav-link" data-view="continue-view">Continue</a>
+            <a href="static/goals.html" class="nav-link">Goals</a>
             <a href="#" class="nav-link" data-view="history-view">History</a>
             <a href="#" class="nav-link" data-view="faculty-view"><i class="fas fa-chalkboard-teacher" style="margin-right: 4px;"></i> Faculty</a>
             <a href="plan.html" class="nav-link" style="color: var(--accent-secondary);">Planner <i class="fas fa-external-link-alt" style="font-size: 0.8em; margin-left: 4px;"></i></a>
@@ -701,6 +752,9 @@
                 <option value="duration_desc">Duration (High to Low)</option>
                 <option value="duration_asc">Duration (Low to High)</option>
             </select>
+            <button id="open-settings-btn" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; transition: color 0.2s;" title="Settings">
+                <i class="fas fa-gear"></i>
+            </button>
         </div>
         <main id="course-grid" class="grid-container"></main>
     </div>
@@ -733,6 +787,11 @@
                     <h3>Realistic Finish Date:</h3>
                     <div class="calc-big-date" id="calc-result-date">Calculating...</div>
                     <div class="calc-meta-stats" id="calc-result-stats">...</div>
+                </div>
+                
+                <div class="calc-results-panel" style="margin-top: 1rem;">
+                    <h3 style="margin-bottom: 5px;">Overall Progress:</h3>
+                    <div class="calc-big-date" id="calc-progress-percentage" style="color: var(--accent-primary);">0%</div>
                 </div>
                 
                 <div class="calc-results-panel" style="margin-top: 1rem; padding: 1rem; position: relative;">
@@ -839,6 +898,17 @@
             </div>
             <button id="dpp-sidebar-toggle-btn"><i class="fas fa-chevron-left"></i></button>
         </div>
+    </div>
+
+    <div id="intell-view" class="view">
+        <div class="intell-header">
+            <h2 style="margin-top: 0; margin-bottom: 16px; color: var(--text-primary); font-size: 1.8rem;"><i class="fas fa-brain" style="color: var(--accent-primary);"></i> Intell Notes Hub</h2>
+            <div class="intell-search-container">
+                <i class="fas fa-search" style="color: var(--text-secondary);"></i>
+                <input type="text" id="intell-search-input" placeholder="Search across all your notes...">
+            </div>
+        </div>
+        <div id="intell-feed-container"></div>
     </div>
 
     <div id="notes-view" class="view">
@@ -1001,7 +1071,27 @@
         </div>
     </div>
 
-    <div id="player-view" class="view">
+    <div id="settings-modal-overlay" class="modal-overlay hidden" style="z-index: 99999;">
+        <div class="modal-content" style="max-width: 400px; color: var(--text-primary);">
+            <button class="close-modal-btn" onclick="document.getElementById('settings-modal-overlay').classList.add('hidden')" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer;" title="Close">&times;</button>
+            <h2 style="margin-bottom: 1rem; color: var(--accent-primary); border-bottom: 1px solid var(--border-secondary); padding-bottom: 0.5rem;">Settings</h2>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="calc-input-group">
+                    <label for="settings-skip-time">Default Skip Time (minutes)</label>
+                    <input type="number" id="settings-skip-time" value="5" min="0" step="1">
+                </div>
+                <div class="calc-input-group">
+                    <label for="settings-playback-speed">Default Playback Speed</label>
+                    <input type="number" id="settings-playback-speed" value="1.75" min="0.1" step="0.05" max="5.0">
+                </div>
+                <div class="calc-input-group">
+                    <label for="settings-autoplay-prompt">Autoplay Prompt (minutes before end)</label>
+                    <input type="number" id="settings-autoplay-prompt" value="3" min="0" step="1">
+                </div>
+                <button id="save-settings-btn" class="primary-btn" style="width: 100%; justify-content: center;">Save Settings</button>
+            </div>
+        </div>
+    </div>
     <div id="shortcuts-modal-overlay" class="modal-overlay hidden" style="z-index: 99999;">
         <div class="modal-content" style="max-width: 700px; color: var(--text-primary);">
             <button class="close-modal-btn" onclick="document.getElementById('shortcuts-modal-overlay').classList.add('hidden')" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer;" title="Close">&times;</button>
@@ -1020,8 +1110,10 @@
                     <h3 style="margin-bottom: 0.5rem; color: var(--text-secondary);">General & Features</h3>
                     <p><kbd style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-secondary);">f</kbd> Fullscreen</p>
                     <p><kbd style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-secondary);">Esc</kbd> Exit Fullscreen / Close Menus / Default View</p>
-                    <p><kbd style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-secondary);">n</kbd> / <kbd style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-secondary);">p</kbd> Next / Previous Lecture</p>
+                    <p><kbd style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-secondary);">n</kbd> / <kbd style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-secondary);">Shift+P</kbd> Next / Previous Lecture</p>
                     <p><kbd style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-secondary);">s</kbd> Capture Doubt</p>
+                    <p><kbd style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-secondary);">z</kbd> Add Bookmark</p>
+                    <p><kbd style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-secondary);">q</kbd> Toggle Notes</p>
                     <p><kbd style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-secondary);">b</kbd> Toggle Brown Noise Mode</p>
                     <p><kbd style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-secondary);">Page Up/Down</kbd> Brown Noise Volume Up/Down</p>
                     <p><kbd style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-secondary);">/</kbd> Show this shortcuts menu</p>
@@ -1029,6 +1121,7 @@
             </div>
         </div>
     </div>
+    <div id="player-view" class="view">
         <div id="pdf-drop-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; border: 4px dashed var(--accent-primary); color: white; opacity: 0; pointer-events: none; transition: opacity 0.2s ease;">
             <i class="fas fa-file-pdf" style="font-size: 5rem; color: var(--accent-primary); margin-bottom: 20px;"></i>
             <h2 style="font-size: 2.5rem; margin-bottom: 10px;">Drop PDF Here</h2>
@@ -1038,7 +1131,10 @@
             <div class="menu-header">
                 <div class="menu-header-top">
                     <a class="back-link">&larr; Back to Courses</a>
-                    <button class="clear-bookmarks-btn hidden">Clear Bookmarks</button>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button class="clear-bookmarks-btn hidden">Clear Bookmarks</button>
+                        <button id="toggle-completed-btn" class="hidden" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.1rem; transition: color 0.2s;" title="Hide Completed Lectures"><i class="fas fa-eye-slash"></i></button>
+                    </div>
                 </div>
                 <h2 id="course-title-menu"></h2>
                 <div class="course-stats"></div>
@@ -1070,6 +1166,9 @@
                             </div>
                             <button id="autoplay-cancel-btn">Cancel</button>
                         </div>
+                    </div>
+                    <div id="skip-intro-btn" style="position: absolute; right: 24px; bottom: 85px; background: rgba(0, 0, 0, 0.8); color: white; border: 1px solid var(--border-primary); padding: 12px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; z-index: 35; display: none; transition: opacity 0.3s; opacity: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+                        Skip Intro <i class="fas fa-forward" style="margin-left: 8px;"></i>
                     </div>
                     <div class="video-controls-container">
                         <div class="timeline-container">
@@ -1111,6 +1210,35 @@
                 <iframe id="media-viewer-frame" src="about:blank"></iframe>
             </div>
             <button id="media-viewer-toggle-btn" class="hidden"><i class="fas fa-chevron-left"></i></button>
+            <div id="player-notes-sidebar" class="hidden" style="width: var(--notes-width); min-width: 0px; background-color: var(--bg-secondary); border-left: 1px solid var(--border-primary); position: relative; z-index: 50; display: flex; flex-direction: column; transition: width 0.3s ease-in-out, opacity 0.3s;">
+                <div id="player-notes-resize-handle" style="position: absolute; top: 0; left: 0; height: 100%; width: 8px; cursor: ew-resize; z-index: 60; background-color: transparent; transition: background-color 0.2s;"></div>
+                <div id="player-notes-sidebar-header" style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; border-bottom: 1px solid var(--border-primary); background-color: var(--bg-secondary); flex-shrink: 0; gap: 1rem;">
+                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 600;">Notes</h3>
+                    <div class="notes-actions" style="display: flex; gap: 8px;">
+                        <button id="player-notes-add-timestamp-btn" title="Add Timestamp" style="background-color: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-secondary); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 500;"><i class="fas fa-clock"></i> Timestamp</button>
+                        <button id="close-player-notes-btn" title="Close Notes" style="background-color: var(--accent-primary); color: white; border: none; border-radius: 6px; width: 28px; height: 28px; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s;"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
+                <div id="player-notes-formatting-toolbar" style="display: flex; gap: 2px; padding: 6px 12px; border-bottom: 1px solid var(--border-primary); background: #111116; overflow-x: auto; align-items: center;">
+                    <button class="notes-format-btn" data-command="formatBlock" data-value="H1" onmousedown="event.preventDefault()" onclick="document.execCommand('formatBlock', false, 'H1')" title="Heading 1" style="font-weight: 500;">H1</button>
+                    <button class="notes-format-btn" data-command="formatBlock" data-value="H2" onmousedown="event.preventDefault()" onclick="document.execCommand('formatBlock', false, 'H2')" title="Heading 2" style="font-weight: 500;">H2</button>
+                    <button class="notes-format-btn" data-command="formatBlock" data-value="P" onmousedown="event.preventDefault()" onclick="document.execCommand('formatBlock', false, 'P')" title="Paragraph" style="font-weight: 500;">P</button>
+                    
+                    <div style="width: 1px; height: 16px; background: rgba(255,255,255,0.1); margin: 0 6px;"></div>
+                    
+                    <button class="notes-format-btn" data-command="insertUnorderedList" onmousedown="event.preventDefault()" onclick="document.execCommand('insertUnorderedList', false, null)" title="Bullet List"><i class="fas fa-list-ul"></i></button>
+                    <button class="notes-format-btn" data-command="insertOrderedList" onmousedown="event.preventDefault()" onclick="document.execCommand('insertOrderedList', false, null)" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                    
+                    <div style="width: 1px; height: 16px; background: rgba(255,255,255,0.1); margin: 0 6px;"></div>
+                    
+                    <button class="notes-format-btn" data-command="bold" onmousedown="event.preventDefault()" onclick="document.execCommand('bold', false, null)" title="Bold" style="font-weight: 800; font-family: serif;">B</button>
+                    <button class="notes-format-btn" data-command="italic" onmousedown="event.preventDefault()" onclick="document.execCommand('italic', false, null)" title="Italic" style="font-style: italic; font-family: serif;">I</button>
+                    <button class="notes-format-btn" data-command="underline" onmousedown="event.preventDefault()" onclick="document.execCommand('underline', false, null)" title="Underline" style="text-decoration: underline; font-family: serif;">U</button>
+                </div>
+                <div id="player-notes-editor-container" style="flex-grow: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column;">
+                    <div id="player-notes-editor" contenteditable="true" placeholder="Type your notes here... (Markdown supported)" style="flex-grow: 1; outline: none; white-space: pre-wrap; font-family: inherit; font-size: 0.95rem; line-height: 1.5; color: var(--text-primary);"></div>
+                </div>
+            </div>
         </div>
         <button id="sidebar-toggle-btn"><i class="fas fa-chevron-left"></i></button>
     </div>
@@ -1290,11 +1418,30 @@
         const importZipInput = document.getElementById('import-zip-input');
         const bookmarksContainer = document.getElementById('bookmarks-container');
         const clearBookmarksBtn = document.querySelector('.clear-bookmarks-btn');
+        const toggleCompletedBtn = document.getElementById('toggle-completed-btn');
+
+        let hideCompletedLectures = false;
+        toggleCompletedBtn.addEventListener('click', () => {
+            hideCompletedLectures = !hideCompletedLectures;
+            if (hideCompletedLectures) {
+                chapterListDiv.classList.add('hide-completed-lectures');
+                toggleCompletedBtn.innerHTML = '<i class="fas fa-eye"></i>';
+                toggleCompletedBtn.title = "Show Completed Lectures";
+                toggleCompletedBtn.style.color = "var(--accent-primary)";
+            } else {
+                chapterListDiv.classList.remove('hide-completed-lectures');
+                toggleCompletedBtn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+                toggleCompletedBtn.title = "Hide Completed Lectures";
+                toggleCompletedBtn.style.color = "var(--text-secondary)";
+            }
+        });
 
         let courses = [];
         let currentCourse = null;
         let currentSubfolder = null; // Track current subfolder path to properly scope the player
         let currentLectureLi = null;
+        let isGoalsMode = false;
+        let currentGoalsLectures = [];
         let courseProgress = {};
         let cachedHistory = null;
         let clickTimer = null;
@@ -1601,12 +1748,15 @@
         function updateTotalTimeLeftDisplay() {
             let totalSecondsLeft = 0;
             let pendingLectures = 0;
+            let totalLecturesCount = 0;
+            let totalCompletedLectures = 0;
             courses.forEach(course => {
                 if (course.isIgnored) return;
                 
                 if (!course.lectures) {
                     totalSecondsLeft += (course.totalDuration || 0);
                     pendingLectures += (course.videoCount || 0);
+                    totalLecturesCount += (course.videoCount || 0);
                     return;
                 }
 
@@ -1622,16 +1772,21 @@
                     }
                     if (isSubfolderIgnored) return;
 
+                    totalLecturesCount++;
                     const progress = getLectureProgress(course.id, lecture.id);
                     if (!progress.completed) {
                         totalSecondsLeft += (lecture.duration || 0);
                         pendingLectures++;
+                    } else {
+                        totalCompletedLectures++;
                     }
                 });
             });
             
             totalTimeDisplay.dataset.seconds = totalSecondsLeft;
             totalTimeDisplay.dataset.lectures = pendingLectures;
+            totalTimeDisplay.dataset.totalLectures = totalLecturesCount;
+            totalTimeDisplay.dataset.completedLectures = totalCompletedLectures;
 
             if (totalSecondsLeft > 0) {
                 totalTimeDisplay.textContent = formatTotalDuration(totalSecondsLeft);
@@ -1731,6 +1886,7 @@
                     renderStatusGrid(viewId.split('-')[0]);
                 }
                 if (viewId === 'dashboard-view') renderCourseGrid();
+                if (viewId === 'intell-view') { if (typeof renderIntellView === 'function') renderIntellView(); }
                 if (viewId === 'upload-view') {
                      document.getElementById('upload-course-grid').classList.remove('hidden');
                      document.getElementById('upload-subfolder-view').classList.add('hidden');
@@ -1827,6 +1983,220 @@
             await recurse(dirHandle, basePath);
             const sortedChapters = Object.values(chapters).filter(ch => ch.lectures.length > 0).sort((a, b) => naturalSort(a, b));
             return { chapters: sortedChapters, videoCount: lectures.length, lectures, totalDuration };
+        }
+
+        function stripHtmlTags(html) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            return tmp.textContent || tmp.innerText || "";
+        }
+
+        window.jumpToLectureFromIntell = async function(courseId, lectureId, time = null) {
+            const course = courses.find(c => c.id == courseId);
+            const lecture = (course?.lectures || []).find(l => l.id == lectureId);
+            if (!course || !lecture) { showToast('Lecture not found', true); return; }
+
+            const subfolder = lecture.chapter || null;
+            await playLectureFromAnywhere(parseInt(courseId), lectureId, 'intell-view', subfolder);
+            
+            // After player loads, seek to timestamp and open notes sidebar
+            setTimeout(() => {
+                if (time !== null && videoPlayer) {
+                    videoPlayer.currentTime = time;
+                }
+                const playerView = document.getElementById('player-view');
+                const playerNotesSidebar = document.getElementById('player-notes-sidebar');
+                if (playerView && !playerView.classList.contains('notes-active')) {
+                    playerView.classList.add('notes-active');
+                    if (playerNotesSidebar) playerNotesSidebar.classList.remove('hidden');
+                    if (typeof loadPlayerNotes === 'function') loadPlayerNotes();
+                }
+            }, 800);
+        }
+
+        function getCoursesWithNotes() {
+            const result = [];
+            courses.forEach(course => {
+                const notes = [];
+                (course.lectures || []).forEach(lecture => {
+                    const progress = getLectureProgress(course.id, lecture.id);
+                    if (progress && progress.notes && progress.notes.trim() !== '') {
+                        notes.push({ lecture, progress });
+                    }
+                });
+                if (notes.length > 0) result.push({ course, notes });
+            });
+            return result;
+        }
+
+        window.renderIntellView = function() {
+            renderIntellHome();
+        }
+
+        window.renderIntellHome = function() {
+            const container = document.getElementById('intell-feed-container');
+            if (!container) return;
+            
+            const coursesWithNotes = getCoursesWithNotes();
+            if (coursesWithNotes.length === 0) {
+                container.innerHTML = "<div class=\"intell-empty-state\">You haven't taken any notes yet! Start watching a lecture and press Q to take notes.</div>";
+                return;
+            }
+
+            let html = `
+                <div class="intell-breadcrumb">
+                    <span>Subjects with Notes</span>
+                </div>
+                <div id="intell-course-grid">
+            `;
+            
+            coursesWithNotes.forEach(({ course, notes }) => {
+                const imgUrl = course.thumbnail || 'placeholder.jpg';
+                const teacher = getSubfolderFacultyName(course, notes[0].lecture.chapter);
+                html += `
+                    <div class="intell-course-square" onclick="renderIntellCourse('${course.id}')">
+                        <img src="${imgUrl}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=&apos;http://www.w3.org/2000/svg&apos; width=&apos;100&apos; height=&apos;100&apos;%3E%3Crect width=&apos;100&apos; height=&apos;100&apos; fill=&apos;%232a2a35&apos;/%3E%3C/svg%3E'">
+                        <div class="intell-course-overlay">
+                            <h2 class="intell-course-title">${course.title}</h2>
+                            <p class="intell-course-teacher">${teacher} • ${notes.length} Note${notes.length > 1 ? 's' : ''}</p>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        window.renderIntellCourse = function(courseId) {
+            const container = document.getElementById('intell-feed-container');
+            if (!container) return;
+            
+            const coursesWithNotes = getCoursesWithNotes();
+            const courseData = coursesWithNotes.find(c => c.course.id == courseId);
+            if (!courseData) {
+                renderIntellHome();
+                return;
+            }
+
+            const { course, notes } = courseData;
+
+            let html = `
+                <div class="intell-breadcrumb">
+                    <a onclick="renderIntellHome()"><i class="fas fa-arrow-left"></i> Subjects</a>
+                    <i class="fas fa-chevron-right" style="font-size: 0.8rem; opacity: 0.5;"></i>
+                    <span>${course.title}</span>
+                </div>
+                <div id="intell-lecture-list">
+            `;
+
+            notes.forEach(({ lecture, progress }) => {
+                html += `
+                    <div class="intell-lecture-row" onclick="renderIntellNote('${course.id}', '${lecture.id}')">
+                        <div>
+                            <div class="intell-lecture-row-title">${lecture.name}</div>
+                            <div class="intell-lecture-row-folder"><i class="fas fa-folder-open" style="margin-right: 6px;"></i>${lecture.chapter || course.title}</div>
+                        </div>
+                        <i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        window.renderIntellNote = function(courseId, lectureId) {
+            const container = document.getElementById('intell-feed-container');
+            if (!container) return;
+
+            const course = courses.find(c => c.id == courseId);
+            const lecture = (course?.lectures || []).find(l => l.id == lectureId);
+            const progress = getLectureProgress(courseId, lectureId);
+            
+            if (!course || !lecture || !progress || !progress.notes) {
+                renderIntellHome();
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="intell-breadcrumb">
+                    <a onclick="renderIntellCourse('${course.id}')"><i class="fas fa-arrow-left"></i> ${course.title}</a>
+                    <i class="fas fa-chevron-right" style="font-size: 0.8rem; opacity: 0.5;"></i>
+                    <span>${lecture.name}</span>
+                </div>
+                <div id="intell-full-note-view" data-course-id="${course.id}" data-lecture-id="${lecture.id}">
+                    <div class="intell-full-note-header">
+                        <div>
+                            <h2>${lecture.name}</h2>
+                            <p><i class="fas fa-folder-open" style="margin-right: 6px;"></i>${lecture.chapter || course.title}</p>
+                        </div>
+                        <a href="#" class="intell-jump-btn" onclick="jumpToLectureFromIntell('${course.id}', '${lecture.id}'); return false;">Go to Lecture <i class="fas fa-external-link-alt" style="margin-left: 4px; font-size: 0.8em;"></i></a>
+                    </div>
+                    <div class="intell-full-note-content player-notes-editor" style="border:none;box-shadow:none;">
+                        ${progress.notes}
+                    </div>
+                </div>
+            `;
+        }
+
+        const intellContainerEl = document.getElementById('intell-feed-container');
+        if (intellContainerEl) {
+            intellContainerEl.addEventListener('click', (e) => {
+                if (e.target.classList.contains('timestamp-link')) {
+                    const time = parseFloat(e.target.dataset.time);
+                    const noteView = e.target.closest('#intell-full-note-view');
+                    if (noteView && !isNaN(time)) {
+                        const courseId = parseInt(noteView.dataset.courseId);
+                        const lectureId = noteView.dataset.lectureId;
+                        if (courseId && lectureId) {
+                            window.jumpToLectureFromIntell(courseId, lectureId, time);
+                        }
+                    }
+                }
+            });
+        }
+
+        window.renderIntellSearchResults = function(query) {
+            const container = document.getElementById('intell-feed-container');
+            if (!container) return;
+            
+            const coursesWithNotes = getCoursesWithNotes();
+            
+            let html = `
+                <div class="intell-breadcrumb">
+                    <a onclick="document.getElementById('intell-search').value = ''; renderIntellHome();"><i class="fas fa-arrow-left"></i> Clear Search</a>
+                    <i class="fas fa-chevron-right" style="font-size: 0.8rem; opacity: 0.5;"></i>
+                    <span>Search Results for "${query}"</span>
+                </div>
+                <div id="intell-lecture-list">
+            `;
+
+            let found = 0;
+            coursesWithNotes.forEach(({ course, notes }) => {
+                notes.forEach(({ lecture, progress }) => {
+                    const searchText = (course.title + ' ' + (lecture.chapter || '') + ' ' + lecture.name + ' ' + stripHtmlTags(progress.notes)).toLowerCase();
+                    if (searchText.includes(query)) {
+                        found++;
+                        html += `
+                            <div class="intell-lecture-row" onclick="renderIntellNote('${course.id}', '${lecture.id}')">
+                                <div>
+                                    <div class="intell-lecture-row-title">${lecture.name} <span style="font-size: 0.85rem; font-weight: normal; color: var(--accent-primary); margin-left: 8px;">in ${course.title}</span></div>
+                                    <div class="intell-lecture-row-folder"><i class="fas fa-folder-open" style="margin-right: 6px;"></i>${lecture.chapter || course.title}</div>
+                                </div>
+                                <i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i>
+                            </div>
+                        `;
+                    }
+                });
+            });
+
+            if (found === 0) {
+                html += `<div class="intell-empty-state" style="padding: 24px; text-align: center;">No notes found matching "${query}".</div>`;
+            }
+
+            html += `</div>`;
+            container.innerHTML = html;
         }
 
         async function renderCourseGrid() {
@@ -2420,10 +2790,16 @@
 
         // --- Player ---
         function updateMenuProgress(subfolder = null) {
-            if (!currentCourse) return;
-            let lectures = currentCourse.lectures || [];
-            if (subfolder) {
-                lectures = lectures.filter(l => l.chapter === subfolder || l.chapter.startsWith(subfolder + '/'));
+            let lectures = [];
+            
+            if (isGoalsMode && typeof currentGoalsLectures !== 'undefined') {
+                lectures = currentGoalsLectures;
+            } else {
+                if (!currentCourse) return;
+                lectures = currentCourse.lectures || [];
+                if (subfolder) {
+                    lectures = lectures.filter(l => l.chapter === subfolder || l.chapter.startsWith(subfolder + '/'));
+                }
             }
 
             let completed = 0;
@@ -2432,10 +2808,13 @@
 
             lectures.forEach(lecture => {
                 totalDuration += lecture.duration || 0;
-                const prog = getLectureProgress(currentCourse.id, lecture.id);
-                if (prog.completed) {
-                    completed++;
-                    timeCompleted += lecture.duration || 0;
+                const actualCourseId = lecture.overrideCourseId || (currentCourse ? currentCourse.id : null);
+                if (actualCourseId) {
+                    const prog = getLectureProgress(actualCourseId, lecture.id);
+                    if (prog && prog.completed) {
+                        completed++;
+                        timeCompleted += lecture.duration || 0;
+                    }
                 }
             });
 
@@ -2467,11 +2846,14 @@
         }
 
         async function renderPlayer(courseId, lectureIdToPlay = null, originView = 'dashboard-view', startTime = null, subfolder = null) {
+            isGoalsMode = false;
+            currentGoalsLectures = [];
             currentCourse = courses.find(c => c.id === parseInt(courseId));
             currentSubfolder = subfolder;
             if (!currentCourse) return;
             switchView('player-view');
             chapterListDiv.innerHTML = '<p style="text-align:center; padding: 20px;">Loading lectures...</p>';
+            toggleCompletedBtn.classList.add('hidden');
             
             if (!currentCourse.lectures || !currentCourse.chapters) {
                 try {
@@ -2503,6 +2885,8 @@
                 } else {
                     backToLibraryBtn.textContent = currentSubfolder ? '← Back to Folder' : '← Back to Course';
                 }
+            } else if (originView === 'intell-view') {
+                backToLibraryBtn.textContent = '← Back to Notes';
             } else if (originView === 'progress-doubts') {
                 backToLibraryBtn.textContent = '← Back to Doubts';
             } else {
@@ -2517,7 +2901,7 @@
                 chaptersToDisplay = chaptersToDisplay.filter(ch => ch.name === subfolder || ch.name.startsWith(subfolder + '/'));
                 courseTitleMenu.textContent = `${currentCourse.title} - ${getSubfolderDisplayName(currentCourse, subfolder)}`;
                 // Only set back view to subcourse-view if we didn't come from doubts, continue, history, or search (preserve those origins)
-                if (originView !== 'doubts-detail-view' && originView !== 'continue-view' && originView !== 'history-view' && originView !== 'search-results-view' && originView !== 'progress-doubts') {
+                if (originView !== 'doubts-detail-view' && originView !== 'continue-view' && originView !== 'history-view' && originView !== 'search-results-view' && originView !== 'progress-doubts' && originView !== 'intell-view') {
                     backToLibraryBtn.dataset.view = 'subcourse-view';
                 }
                 backToLibraryBtn.dataset.subfolder = subfolder;
@@ -2560,7 +2944,71 @@
             }
             if (liToPlay) await playVideo(liToPlay, resumeTime);
         }
-        
+        async function renderGoalsPlayer(courseId, lectureIdToPlay) {
+            currentCourse = courses.find(c => c.id === parseInt(courseId));
+            if (!currentCourse) return;
+            switchView('player-view');
+            chapterListDiv.innerHTML = '<p style="text-align:center; padding: 20px;">Loading Goals playlist...</p>';
+            
+            backToLibraryBtn.textContent = 'Back to Goals';
+            backToLibraryBtn.dataset.view = 'goals';
+            courseTitleMenu.textContent = `Daily Goals Playlist`;
+            clearBookmarksBtn.classList.add('hidden');
+            toggleCompletedBtn.classList.remove('hidden');
+
+            const saved = localStorage.getItem('courseflix_goals_playlist');
+            let goalsPlaylist = [];
+            if (saved) {
+                goalsPlaylist = JSON.parse(saved);
+            }
+
+            if (goalsPlaylist.length === 0) {
+                chapterListDiv.innerHTML = '<p id="no-content-message">Playlist is empty.</p>';
+                return;
+            }
+
+            // Group by courseTitle
+            const chaptersToDisplay = [];
+            goalsPlaylist.forEach(item => {
+                let ch = chaptersToDisplay.find(c => c.name === item.courseTitle);
+                if (!ch) {
+                    ch = { name: item.courseTitle, lectures: [] };
+                    chaptersToDisplay.push(ch);
+                }
+                const originalCourse = courses.find(c => c.id === parseInt(item.courseId));
+                if (originalCourse) {
+                    let fullLecture;
+                    if (originalCourse.lectures) {
+                        fullLecture = originalCourse.lectures.find(l => l.id === item.lectureId.toString());
+                        if (!fullLecture && typeof item.lectureId === 'number') {
+                             fullLecture = originalCourse.lectures[item.lectureId];
+                        }
+                    }
+                    if (fullLecture) {
+                        const copy = {...fullLecture};
+                        copy.overrideCourseId = item.courseId;
+                        // Keep original fullLecture.id for playVideo lookup
+                        ch.lectures.push(copy);
+                    }
+                }
+            });
+
+            renderChapterList(chaptersToDisplay, lectureIdToPlay?.toString());
+
+            isGoalsMode = true;
+            currentGoalsLectures = chaptersToDisplay.flatMap(ch => ch.lectures);
+            updateMenuProgress();
+
+            let liToPlay = null;
+            if (lectureIdToPlay !== null) {
+                liToPlay = chapterListDiv.querySelector(`li[data-course-id="${courseId}"][data-lecture-id="${lectureIdToPlay}"]`) || chapterListDiv.querySelector(`li[data-lecture-id="${lectureIdToPlay}"]`);
+            }
+            if (!liToPlay) {
+                liToPlay = chapterListDiv.querySelector('li');
+            }
+            if (liToPlay) await playVideo(liToPlay, null);
+        }
+
         function renderChapterList(chaptersToDisplay, lectureIdToPlay = null) {
              chapterListDiv.innerHTML = '';
              if (!chaptersToDisplay || chaptersToDisplay.length === 0 || (chaptersToDisplay.length === 1 && chaptersToDisplay[0].lectures.length === 0)) {
@@ -2572,7 +3020,7 @@
                  const chapterDiv = document.createElement('div');
                  chapterDiv.className = 'chapter open';
                  chapterDiv.dataset.chapterName = chapter.name;
-                 chapterDiv.draggable = true;
+                 chapterDiv.draggable = !isGoalsMode;
 
                  const chapterDuration = chapter.lectures.reduce((sum, lect) => sum + (lect.duration || 0), 0);
 
@@ -2581,8 +3029,7 @@
 
                  chapterDiv.innerHTML = `
                      <div class="chapter-title">
-                         <i class="fas fa-grip-vertical chapter-drag-handle" title="Drag to reorder"></i>
-                         <i class="fas fa-chevron-right"></i>
+                         ${isGoalsMode ? '<i class="fas fa-chevron-right" style="margin-left: 12px;"></i>' : '<i class="fas fa-grip-vertical chapter-drag-handle" title="Drag to reorder"></i><i class="fas fa-chevron-right"></i>'}
                          <span class="chapter-title-text" title="Double-click to rename">${displayName}</span>
                          <span class="chapter-duration">${formatDuration(chapterDuration)}</span>
                      </div>`;
@@ -2591,9 +3038,11 @@
                  lectureList.className = 'lecture-list';
 
                  for (const lecture of chapter.lectures) {
-                     const progress = getLectureProgress(currentCourse.id, lecture.id);
+                     const actualCourseId = lecture.overrideCourseId || currentCourse.id;
+                     const progress = getLectureProgress(actualCourseId, lecture.id);
                      const lectureLi = document.createElement('li');
                      lectureLi.dataset.lectureId = lecture.id;
+                     if (lecture.overrideCourseId) lectureLi.dataset.courseId = lecture.overrideCourseId;
 
                      const pdfBtn = progress.pdfHandle
                          ? `<button class="file-btn view-pdf-btn" title="${progress.pdfName || 'View Notes'}"><i class="fas fa-file-pdf"></i></button>`
@@ -2617,14 +3066,15 @@
                      lectureList.appendChild(lectureLi);
                  }
                  chapterDiv.appendChild(lectureList);
-                 chapterListDiv.appendChild(chapterDiv);
+            chapterListDiv.appendChild(chapterDiv);
              });
         }
 
         // --- Autoplay Next Episode ---
-        let autoplayTimer = null;
-        let autoplayCountdown = 5;
         let pendingAutoplayLi = null;
+        let autoplayCountdown = 0;
+        let autoplayTimer = null;
+        let autoplayTriggered = false;
 
         function getNextLectureLi(currentLi) {
             let next = currentLi.nextElementSibling;
@@ -2660,7 +3110,8 @@
             return null;
         }
 
-        function showAutoplayOverlay(nextLi) {
+        function showAutoplayOverlay(nextLi, duration = 5) {
+            if (document.getElementById('autoplay-overlay').classList.contains('visible')) return;
             pendingAutoplayLi = nextLi;
             const overlay = document.getElementById('autoplay-overlay');
             const nextTitleEl = nextLi.querySelector('.lecture-title');
@@ -2668,7 +3119,7 @@
             document.getElementById('autoplay-next-title').textContent = nextTitle;
             overlay.classList.add('visible');
 
-            autoplayCountdown = 5;
+            autoplayCountdown = duration;
             document.getElementById('autoplay-countdown-text').textContent = autoplayCountdown;
 
             const circle = document.getElementById('autoplay-countdown-circle');
@@ -2680,7 +3131,7 @@
             // Trigger reflow then animate
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
-                    circle.style.transition = `stroke-dashoffset 5s linear`;
+                    circle.style.transition = `stroke-dashoffset ${duration}s linear`;
                     circle.style.strokeDashoffset = circumference;
                 });
             });
@@ -2697,7 +3148,8 @@
         }
 
         function hideAutoplayOverlay() {
-            document.getElementById('autoplay-overlay').classList.remove('visible');
+            const overlay = document.getElementById('autoplay-overlay');
+            if (overlay) overlay.classList.remove('visible');
             if (autoplayTimer) {
                 clearInterval(autoplayTimer);
                 autoplayTimer = null;
@@ -2726,6 +3178,7 @@
         }
 
         async function playVideo(liElement, startTime = null) {
+            autoplayTriggered = false;
             hideAutoplayOverlay(); // Clear any pending autoplay
 
             if (currentLectureLi) { // Save last played info before switching
@@ -2739,6 +3192,12 @@
             currentLectureLi = liElement;
             currentLectureLi.classList.add('active');
             const lectureId = liElement.dataset.lectureId;
+            
+            const courseIdOverride = liElement.dataset.courseId;
+            if (courseIdOverride && parseInt(courseIdOverride) !== currentCourse.id) {
+                currentCourse = courses.find(c => c.id === parseInt(courseIdOverride));
+            }
+            
             const lecture = currentCourse.lectures.find(l => l.id === lectureId);
             if (!lecture) return;
 
@@ -2809,11 +3268,7 @@
                     currentLectureLi.querySelector('.lecture-checkbox').classList.add('completed');
                     currentLectureLi.querySelector('.lecture-title').classList.add('completed');
 
-                    // Autoplay next lecture
-                    const nextLi = getNextLectureLi(currentLectureLi);
-                    if (nextLi) {
-                        showAutoplayOverlay(nextLi);
-                    }
+                    // Autoplay next lecture handled by timeupdate
                 };
             } catch (error) {
                 console.error("Failed to load video:", error);
@@ -3459,8 +3914,10 @@
             if(!lectureLi) return;
 
             const lectureId = lectureLi.dataset.lectureId;
-            const lectureProgress = getLectureProgress(currentCourse.id, lectureId);
-            const lecture = currentCourse.lectures.find(l => l.id === lectureId);
+            const courseIdOverride = lectureLi.dataset.courseId;
+            const targetCourse = courseIdOverride ? courses.find(c => c.id === parseInt(courseIdOverride)) : currentCourse;
+            const lectureProgress = getLectureProgress(targetCourse.id, lectureId);
+            const lecture = targetCourse.lectures.find(l => l.id === lectureId);
 
             if (e.target.closest('.add-pdf-btn')) {
                 addPdfInput.dataset.lectureId = lectureId;
@@ -3488,7 +3945,7 @@
                 btn.className = 'status-btn';
                 if (newStatus) btn.classList.add(newStatus);
                 btn.textContent = newStatus ? newStatus.toUpperCase() : 'STATUS';
-                await saveLectureProgress({ ...lectureProgress, status: newStatus, courseTitle: currentCourse.title, lectureName: lecture.displayName, lectureDuration: lecture.duration, courseId: currentCourse.id, lectureId: lectureId });
+                await saveLectureProgress({ ...lectureProgress, status: newStatus, courseTitle: targetCourse.title, lectureName: lecture.displayName, lectureDuration: lecture.duration, courseId: targetCourse.id, lectureId: lectureId });
             } else if(e.target.closest('.lecture-checkbox')) {
                 e.stopPropagation();
                 const checkbox = e.target.closest('.lecture-checkbox');
@@ -3498,10 +3955,10 @@
                 await saveLectureProgress({ 
                     ...lectureProgress, 
                     completed: isCompleted, 
-                    courseId: currentCourse.id, 
+                    courseId: targetCourse.id, 
                     lectureId: lectureId,
                     lectureName: lecture.displayName,
-                    courseTitle: currentCourse.title,
+                    courseTitle: targetCourse.title,
                     lectureDuration: lecture.duration
                 });
                 updateMenuProgress(currentSubfolder);
@@ -3549,19 +4006,23 @@
                 } else {
                     const li = titleDiv.closest('li');
                     const lectureId = li.dataset.lectureId;
-                    const lecture = currentCourse.lectures.find(l => l.id === lectureId);
+                    const courseIdOverride = li.dataset.courseId;
+                    const targetCourse = courseIdOverride ? courses.find(c => c.id === parseInt(courseIdOverride)) : currentCourse;
+                    const lecture = targetCourse.lectures.find(l => l.id === lectureId);
                     
-                    if (newName && newName !== lecture.displayName) {
+                    if (lecture && newName && newName !== lecture.displayName) {
                         lecture.displayName = newName;
-                        await new Promise(resolve => getStore(STORE_NAME, 'readwrite').put(currentCourse).onsuccess = resolve);
-                        const progress = getLectureProgress(currentCourse.id, lectureId);
+                        await new Promise(resolve => getStore(STORE_NAME, 'readwrite').put(targetCourse).onsuccess = resolve);
+                        const progress = getLectureProgress(targetCourse.id, lectureId);
                         if (progress) {
-                            await saveLectureProgress({ ...progress, lectureName: newName, courseId: currentCourse.id, lectureId: lectureId });
+                            await saveLectureProgress({ ...progress, lectureName: newName, courseId: targetCourse.id, lectureId: lectureId });
                         }
                     }
-                    titleDiv.innerHTML = newName || lecture.displayName;
-                    titleDiv.title = (newName || lecture.displayName) + " (Double-click to rename)";
-                    li.querySelector('.status-btn').dataset.lectureName = newName || lecture.displayName;
+                    if (lecture) {
+                        titleDiv.innerHTML = newName || lecture.displayName;
+                        titleDiv.title = (newName || lecture.displayName) + " (Double-click to rename)";
+                        li.querySelector('.status-btn').dataset.lectureName = newName || lecture.displayName;
+                    }
                 }
             };
 
@@ -3617,6 +4078,10 @@
                 return;
             }
             const targetView = backToLibraryBtn.dataset.view || 'dashboard-view';
+            if (targetView === 'goals') {
+                window.location.href = 'static/goals.html';
+                return;
+            }
             if (targetView === 'progress-doubts') {
                 window.location.href = 'progress.html#doubt-dashboard';
                 return;
@@ -3627,6 +4092,9 @@
                 showFilteredCoursesView(targetView.split('-')[0]);
             } else if (targetView === 'search-results-view') {
                 switchView(targetView);
+            } else if (targetView === 'intell-view') {
+                switchView('intell-view');
+                if (typeof renderIntellView === 'function') renderIntellView();
             } else if (targetView === 'dashboard-view' || targetView === 'continue-view') {
                 switchView(targetView);
             } else if (targetView === 'doubts-detail-view') {
@@ -3693,7 +4161,7 @@
                 // Also persist last played lecture to the course for cross-session resume
                 currentCourse.lastPlayedLecture = { lectureId, currentTime };
                 new Promise(r => getStore(STORE_NAME, 'readwrite').put(currentCourse).onsuccess = r);
-                const state = { view: 'player-view', courseId: currentCourse.id, lectureId, currentTime, lastView, sidebarCollapsed: lectureMenu.classList.contains('hidden'), subfolder: currentSubfolder };
+                const state = { view: 'player-view', courseId: currentCourse.id, lectureId, currentTime, lastView, sidebarCollapsed: lectureMenu.classList.contains('hidden'), subfolder: currentSubfolder, isGoalsPlaylist: backToLibraryBtn.dataset.view === 'goals' };
                 sessionStorage.setItem('courseflixState', JSON.stringify(state));
             }
         }, 5000);
@@ -3705,7 +4173,7 @@
                 // Save last played lecture synchronously via the existing course object
                 currentCourse.lastPlayedLecture = { lectureId, currentTime };
                 try { getStore(STORE_NAME, 'readwrite').put(currentCourse); } catch(e) {}
-                const state = { view: 'player-view', courseId: currentCourse.id, lectureId, currentTime, lastView, sidebarCollapsed: lectureMenu.classList.contains('hidden'), subfolder: currentSubfolder };
+                const state = { view: 'player-view', courseId: currentCourse.id, lectureId, currentTime, lastView, sidebarCollapsed: lectureMenu.classList.contains('hidden'), subfolder: currentSubfolder, isGoalsPlaylist: backToLibraryBtn.dataset.view === 'goals' };
                 sessionStorage.setItem('courseflixState', JSON.stringify(state));
             }
         });
@@ -4410,6 +4878,27 @@
                 timeline.value = currentTime; 
                 const p = (currentTime / videoPlayer.duration) * 100; 
                 timeline.style.background = `linear-gradient(to right, var(--accent-primary) ${p}%, rgba(255, 255, 255, 0.3) ${p}%)`;
+                
+                const skipBtn = document.getElementById('skip-intro-btn');
+                if (currentTime <= 5 && videoPlayer.duration > 5) {
+                    skipBtn.style.display = 'block';
+                    setTimeout(() => skipBtn.style.opacity = '1', 10);
+                } else {
+                    skipBtn.style.opacity = '0';
+                    setTimeout(() => { if (skipBtn.style.opacity === '0') skipBtn.style.display = 'none'; }, 300);
+                }
+                const promptTimeStr = localStorage.getItem('defaultAutoplayPrompt') || "3";
+                const promptTime = parseFloat(promptTimeStr) * 60;
+
+                if (videoPlayer.duration - currentTime <= promptTime && !autoplayTriggered && videoPlayer.duration > promptTime) {
+                    autoplayTriggered = true;
+                    const nextLi = getNextLectureLi(currentLectureLi);
+                    if (nextLi) {
+                        showAutoplayOverlay(nextLi, 60);
+                    } else {
+                        showToast('No next lecture found', true);
+                    }
+                }
             } 
         });
         videoPlayer.addEventListener('loadedmetadata', () => { 
@@ -4417,10 +4906,11 @@
             timeline.max = videoPlayer.duration; 
         });
         timeline.addEventListener('input', (e) => videoPlayer.currentTime = e.target.value);
-        fullscreenBtn.addEventListener('click', () => { if (!document.fullscreenElement) playerView.requestFullscreen().catch(err => showToast(`Error: ${err.message}`, true)); else document.exitFullscreen(); });
+        fullscreenBtn.addEventListener('click', () => { if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(err => showToast(`Error: ${err.message}`, true)); else document.exitFullscreen(); });
         
-        const speeds = [1, 1.25, 1.5, 1.6, 1.75, 1.85, 2, 2.25, 2.5, 3]; let currentSpeedIndex = 3; // Default 1.6x
-        window.activePlaybackRate = window.activePlaybackRate || speeds[currentSpeedIndex];
+        const speeds = [1, 1.25, 1.5, 1.6, 1.75, 1.85, 2, 2.25, 2.5, 3]; let currentSpeedIndex = 4; // Default 1.75x
+        const savedPlaybackSpeed = parseFloat(localStorage.getItem('defaultPlaybackSpeed') || '1.75');
+        window.activePlaybackRate = window.activePlaybackRate || savedPlaybackSpeed;
         videoPlayer.playbackRate = window.activePlaybackRate;
         speedBtn.textContent = `${window.activePlaybackRate}x`;
         speedBtn.addEventListener('click', () => {
@@ -4458,15 +4948,18 @@
         let dragCounter = 0;
 
         playerView.addEventListener('dragenter', (e) => {
+            if (!e.dataTransfer.types.includes('Files')) return;
             e.preventDefault();
             dragCounter++;
             pdfDropOverlay.style.opacity = '1';
             pdfDropOverlay.style.pointerEvents = 'auto';
         });
         playerView.addEventListener('dragover', (e) => {
+            if (!e.dataTransfer.types.includes('Files')) return;
             e.preventDefault();
         });
         playerView.addEventListener('dragleave', (e) => {
+            if (!e.dataTransfer.types.includes('Files')) return;
             e.preventDefault();
             dragCounter--;
             if (dragCounter === 0) {
@@ -4475,6 +4968,7 @@
             }
         });
         playerView.addEventListener('drop', async (e) => {
+            if (!e.dataTransfer.types.includes('Files')) return;
             e.preventDefault();
             dragCounter = 0;
             pdfDropOverlay.style.opacity = '0';
@@ -4541,7 +5035,7 @@
                 return;
             }
 
-            const activeInput = document.querySelector('input:focus, textarea:focus');
+            const activeInput = document.querySelector('input:focus, textarea:focus, [contenteditable="true"]:focus');
              if (activeInput) {
                  if (e.key === 'Escape') {
                      activeInput.blur();
@@ -4588,10 +5082,28 @@
                     }
                     break;
                 case 'p': 
-                    if (view.id === 'player-view' && currentLectureLi) {
-                        const prevLi = getPreviousLectureLi(currentLectureLi);
-                        if (prevLi) playVideo(prevLi);
-                        else showToast('No previous lecture available.');
+                    if (e.shiftKey) {
+                        if (view.id === 'player-view' && currentLectureLi) {
+                            const prevLi = getPreviousLectureLi(currentLectureLi);
+                            if (prevLi) playVideo(prevLi);
+                            else showToast('No previous lecture available.');
+                        }
+                    }
+                    break;
+                case 'z':
+                    if (view.id === 'player-view') addBookmark();
+                    break;
+                case 'q':
+                    if (view.id === 'player-view') {
+                        const playerNotesSidebar = document.getElementById('player-notes-sidebar');
+                        if (playerView.classList.contains('notes-active')) {
+                            playerView.classList.remove('notes-active');
+                            playerNotesSidebar.classList.add('hidden');
+                        } else {
+                            playerView.classList.add('notes-active');
+                            playerNotesSidebar.classList.remove('hidden');
+                            if (typeof loadPlayerNotes === 'function') loadPlayerNotes();
+                        }
                     }
                     break;
                 case 'ArrowRight': if (view.id === 'player-view') videoPlayer.currentTime += 10; break;
@@ -4725,9 +5237,31 @@
                 dot.className = 'bookmark-dot';
                 dot.style.left = `${(time / videoPlayer.duration) * 100}%`;
                 dot.title = `Bookmark at ${formatTime(time)}`;
-                dot.onclick = (e) => {
+                dot.innerHTML = '<i class="fa-solid fa-flag"></i>';
+                let hoverTimeout;
+                dot.onmouseenter = () => {
+                    hoverTimeout = setTimeout(() => {
+                        dot.innerHTML = '<i class="fa-solid fa-trash" style="color: var(--accent-danger);"></i>';
+                        dot.dataset.deletable = 'true';
+                        dot.title = "Click to remove bookmark";
+                    }, 2000);
+                };
+                dot.onmouseleave = () => {
+                    clearTimeout(hoverTimeout);
+                    dot.innerHTML = '<i class="fa-solid fa-flag"></i>';
+                    dot.dataset.deletable = 'false';
+                    dot.title = `Bookmark at ${formatTime(time)}`;
+                };
+                dot.onclick = async (e) => {
                     e.stopPropagation();
-                    videoPlayer.currentTime = time;
+                    if (dot.dataset.deletable === 'true') {
+                        const newBookmarks = bookmarks.filter(b => b !== time);
+                        await saveLectureProgress({ ...progress, courseId: currentCourse.id, lectureId, bookmarks: newBookmarks });
+                        renderBookmarks();
+                        showToast('Bookmark removed');
+                    } else {
+                        videoPlayer.currentTime = time;
+                    }
                 };
                 bookmarksContainer.appendChild(dot);
             });
@@ -5958,6 +6492,8 @@
              const displayEl = document.getElementById('total-time-left-display');
              const totalSeconds = parseFloat(displayEl.dataset.seconds || 0);
              const pendingLectures = parseInt(displayEl.dataset.lectures || 0);
+             const totalLectures = parseInt(displayEl.dataset.totalLectures || 0);
+             const completedLectures = parseInt(displayEl.dataset.completedLectures || 0);
              
              const dailyHours = parseFloat(document.getElementById('calc-daily-hours').value) || 7;
              const speed = parseFloat(document.getElementById('calc-playback-speed').value) || 1.5;
@@ -5965,6 +6501,17 @@
              localStorage.setItem('calcDailyHours', dailyHours);
              localStorage.setItem('calcPlaybackSpeed', speed);
              updateDailyGoalDisplay(dailyHours, speed);
+             
+             const calcProgressEl = document.getElementById('calc-progress-percentage');
+             if (calcProgressEl) {
+                 const pct = totalLectures > 0 ? Math.round((completedLectures / totalLectures) * 100) : 0;
+                 calcProgressEl.innerText = `${pct}%`;
+                 if (pct === 100) {
+                     calcProgressEl.style.color = 'var(--success)';
+                 } else {
+                     calcProgressEl.style.color = 'var(--accent-primary)';
+                 }
+             }
              
              if (totalSeconds === 0) {
                  document.getElementById('calc-result-date').innerText = "Already Finished!";
@@ -6616,13 +7163,29 @@
             await loadAllProgress();
             await loadCoursesFromDB();
             
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('playGoalsPlaylist')) {
+                const pc = parseInt(urlParams.get('playCourse'));
+                const pl = urlParams.get('playLecture');
+                try { window.history.replaceState({}, document.title, window.location.pathname); } catch(e) {} // clear params safely
+                await renderGoalsPlayer(pc, pl);
+                return;
+            } else if (urlParams.has('playCourse') && urlParams.has('playLecture')) {
+                const pc = parseInt(urlParams.get('playCourse'));
+                const pl = urlParams.get('playLecture');
+                try { window.history.replaceState({}, document.title, window.location.pathname); } catch(e) {} // clear params safely
+                await playLectureFromAnywhere(pc, pl, 'dashboard-view');
+                return;
+            }
+            
             let sessionRestored = false;
             const savedStateJSON = sessionStorage.getItem('courseflixState');
             // Always try to restore the player session so a refresh doesn't lose context
             if (savedStateJSON) {
                 const navEntries = performance.getEntriesByType("navigation");
                 const isReload = navEntries.length > 0 && navEntries[0].type === "reload";
-                const isExplicitNavigation = !isReload && window.location.hash && window.location.hash !== '#player-view';
+                const isFromExternalPage = navEntries.length > 0 && navEntries[0].type === "navigate" && document.referrer && !document.referrer.endsWith('index.html');
+                const isExplicitNavigation = !isReload && (isFromExternalPage || (window.location.hash && window.location.hash !== '#player-view'));
                 
                 if (isExplicitNavigation) {
                     sessionStorage.removeItem('courseflixState');
@@ -6635,7 +7198,14 @@
                         }
                         const courseExists = courses.some(c => c.id === savedState.courseId);
                         if (courseExists) {
-                          await renderPlayer(savedState.courseId, savedState.lectureId, savedState.lastView, savedState.currentTime, savedState.subfolder);
+                          if (savedState.isGoalsPlaylist) {
+                              await renderGoalsPlayer(savedState.courseId, savedState.lectureId);
+                              if (savedState.currentTime) {
+                                  videoPlayer.currentTime = savedState.currentTime;
+                              }
+                          } else {
+                              await renderPlayer(savedState.courseId, savedState.lectureId, savedState.lastView, savedState.currentTime, savedState.subfolder);
+                          }
                           sessionRestored = true;
                         }
                     }
@@ -7261,6 +7831,224 @@
                 }
             }
         }
+
+        // --- NEW FEATURES INITIALIZATION ---
+        
+        // 1. Settings
+        const settingsModalOverlay = document.getElementById('settings-modal-overlay');
+        const openSettingsBtn = document.getElementById('open-settings-btn');
+        const saveSettingsBtn = document.getElementById('save-settings-btn');
+        const skipTimeInput = document.getElementById('settings-skip-time');
+        const playbackSpeedInput = document.getElementById('settings-playback-speed');
+        const autoplayPromptInput = document.getElementById('settings-autoplay-prompt');
+
+        if (openSettingsBtn) {
+            openSettingsBtn.addEventListener('click', () => {
+                skipTimeInput.value = localStorage.getItem('defaultSkipTime') || '5';
+                playbackSpeedInput.value = localStorage.getItem('defaultPlaybackSpeed') || '1.75';
+                if (autoplayPromptInput) autoplayPromptInput.value = localStorage.getItem('defaultAutoplayPrompt') || '3';
+                settingsModalOverlay.classList.remove('hidden');
+            });
+        }
+        if (saveSettingsBtn) {
+            saveSettingsBtn.addEventListener('click', () => {
+                localStorage.setItem('defaultSkipTime', skipTimeInput.value);
+                const speed = parseFloat(playbackSpeedInput.value) || 1.75;
+                localStorage.setItem('defaultPlaybackSpeed', speed);
+                if (autoplayPromptInput) localStorage.setItem('defaultAutoplayPrompt', autoplayPromptInput.value);
+                window.activePlaybackRate = speed;
+                videoPlayer.playbackRate = speed;
+                speedBtn.textContent = `${speed}x`;
+                settingsModalOverlay.classList.add('hidden');
+                showToast('Settings Saved');
+            });
+        }
+
+        // 2. Skip Intro
+        const skipIntroBtn = document.getElementById('skip-intro-btn');
+        if (skipIntroBtn) {
+            skipIntroBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const skipTimeStr = localStorage.getItem('defaultSkipTime') || "5";
+                const skipTime = parseFloat(skipTimeStr) * 60;
+                videoPlayer.currentTime = Math.min(videoPlayer.duration, videoPlayer.currentTime + skipTime);
+                videoPlayer.play().catch(e => console.error("Playback failed:", e));
+                skipIntroBtn.blur();
+                showToast(`Skipped ${skipTimeStr} minutes`);
+            });
+        }
+
+        // 3. Notes Sidebar
+        const playerNotesSidebar = document.getElementById('player-notes-sidebar');
+        const closePlayerNotesBtn = document.getElementById('close-player-notes-btn');
+        const playerNotesEditor = document.getElementById('player-notes-editor');
+        const playerNotesTimestampBtn = document.getElementById('player-notes-add-timestamp-btn');
+        const playerNotesResizeHandle = document.getElementById('player-notes-resize-handle');
+
+        let isResizingPlayerNotes = false;
+        if (playerNotesResizeHandle) {
+            playerNotesResizeHandle.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                isResizingPlayerNotes = true;
+                document.body.style.cursor = 'ew-resize';
+                document.getElementById('video-wrapper').style.pointerEvents = 'none';
+            });
+        }
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizingPlayerNotes) return;
+            const newWidth = document.body.clientWidth - e.clientX;
+            const minWidth = 200;
+            const maxWidth = document.body.clientWidth * 0.8;
+            if (newWidth > minWidth && newWidth < maxWidth) {
+                playerView.style.setProperty('--notes-width', `${newWidth}px`);
+                playerNotesSidebar.style.width = `${newWidth}px`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizingPlayerNotes) {
+                isResizingPlayerNotes = false;
+                document.body.style.cursor = 'default';
+                document.getElementById('video-wrapper').style.pointerEvents = '';
+            }
+        });
+
+        if (closePlayerNotesBtn) {
+            closePlayerNotesBtn.addEventListener('click', () => {
+                playerView.classList.remove('notes-active');
+                playerNotesSidebar.classList.add('hidden');
+            });
+        }
+
+        window.loadPlayerNotes = function() {
+            if (!currentCourse || !currentLectureLi) return;
+            const lectureId = currentLectureLi.dataset.lectureId;
+            const progress = getLectureProgress(currentCourse.id, lectureId);
+            playerNotesEditor.innerHTML = progress.notes || '';
+        };
+
+        window.savePlayerNotes = function() {
+            if (!currentCourse || !currentLectureLi) return;
+            const lectureId = currentLectureLi.dataset.lectureId;
+            const progress = getLectureProgress(currentCourse.id, lectureId);
+            progress.courseId = currentCourse.id;
+            progress.lectureId = lectureId;
+            progress.notes = playerNotesEditor.innerHTML;
+            saveLectureProgress(progress);
+        };
+
+        if (playerNotesEditor) {
+            playerNotesEditor.addEventListener('input', () => {
+                window.savePlayerNotes();
+            });
+            playerNotesEditor.addEventListener('paste', (e) => {
+                const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+                for (let index in items) {
+                    const item = items[index];
+                    if (item.kind === 'file' && item.type.startsWith('image/')) {
+                        const blob = item.getAsFile();
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            const img = document.createElement('img');
+                            img.src = event.target.result;
+                            img.style.maxWidth = '100%';
+                            img.style.borderRadius = '8px';
+                            img.style.marginTop = '8px';
+                            img.style.border = '1px solid var(--border-secondary)';
+                            const selection = window.getSelection();
+                            if (!selection.rangeCount) return false;
+                            selection.deleteFromDocument();
+                            selection.getRangeAt(0).insertNode(img);
+                            selection.collapseToEnd();
+                            window.savePlayerNotes();
+                        };
+                        reader.readAsDataURL(blob);
+                        e.preventDefault();
+                    }
+                }
+            });
+            playerNotesEditor.addEventListener('click', (e) => {
+                if (e.target.classList.contains('timestamp-link')) {
+                    const time = parseFloat(e.target.dataset.time);
+                    if (!isNaN(time)) videoPlayer.currentTime = time;
+                }
+            });
+        }
+
+        if (playerNotesTimestampBtn) {
+            playerNotesTimestampBtn.addEventListener('click', () => {
+                const time = videoPlayer.currentTime;
+                const link = `<span contenteditable="false" class="timestamp-link" data-time="${time}">${formatTime(time)}</span>&nbsp;`;
+                const selection = window.getSelection();
+                if (selection.rangeCount > 0 && selection.anchorNode && playerNotesEditor.contains(selection.anchorNode)) {
+                    const range = selection.getRangeAt(0);
+                    const el = document.createElement('div');
+                    el.innerHTML = link;
+                    const frag = document.createDocumentFragment();
+                    let node, lastNode;
+                    while ( (node = el.firstChild) ) {
+                        lastNode = frag.appendChild(node);
+                    }
+                    range.insertNode(frag);
+                    if (lastNode) {
+                        const newRange = range.cloneRange();
+                        newRange.setStartAfter(lastNode);
+                        newRange.collapse(true);
+                        selection.removeAllRanges();
+                        selection.addRange(newRange);
+                    }
+                } else {
+                    playerNotesEditor.innerHTML += link;
+                }
+                window.savePlayerNotes();
+                playerNotesEditor.focus();
+            });
+        }
+        
+        // --- Notes Formatting Active States ---
+        const formatBtns = document.querySelectorAll('.notes-format-btn[data-command]');
+        function updateToolbarState() {
+            if (document.activeElement !== playerNotesEditor) return;
+            formatBtns.forEach(btn => {
+                const cmd = btn.dataset.command;
+                const val = btn.dataset.value;
+                if (cmd === 'formatBlock') {
+                    const currentBlock = document.queryCommandValue(cmd);
+                    if (currentBlock && currentBlock.toLowerCase() === val.toLowerCase()) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                } else {
+                    if (document.queryCommandState(cmd)) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                }
+            });
+        }
+        document.addEventListener('selectionchange', updateToolbarState);
+        if (playerNotesEditor) {
+            playerNotesEditor.addEventListener('keyup', updateToolbarState);
+            playerNotesEditor.addEventListener('mouseup', updateToolbarState);
+        }
+        formatBtns.forEach(btn => btn.addEventListener('click', () => setTimeout(updateToolbarState, 50)));
+
+        const intellSearchInput = document.getElementById('intell-search-input');
+        if (intellSearchInput) {
+            intellSearchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase().trim();
+                if (query === '') {
+                    renderIntellHome();
+                } else {
+                    renderIntellSearchResults(query);
+                }
+            });
+        }
+
         main().catch(err => {
             console.error('CourseFlix init error:', err);
             // Safety net: if main() fails, ensure nav is visible and dashboard is shown
