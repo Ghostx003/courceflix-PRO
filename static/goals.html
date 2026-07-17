@@ -243,6 +243,8 @@
                 <button class="primary-btn" id="create-new-btn"><i class="fas fa-plus"></i> New Playlist</button>
             </div>
 
+            <div id="playlist-stats-container" style="display: flex; gap: 1rem; margin-bottom: 2rem;"></div>
+
             <div id="continue-container">
                 <!-- Continue learning card here -->
             </div>
@@ -251,6 +253,15 @@
                 <h3 class="section-title"><i class="fas fa-list-ul"></i> Upcoming Lectures</h3>
                 <div class="upcoming-list" id="upcoming-list-container">
                     <!-- Upcoming lectures here -->
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem;">
+                <h3 class="section-title" style="cursor: pointer; border-bottom-color: var(--border-secondary);" onclick="const c = document.getElementById('finished-list-container'); c.style.display = c.style.display === 'none' ? 'flex' : 'none'; this.querySelector('.fa-chevron-down, .fa-chevron-up').classList.toggle('fa-chevron-up'); this.querySelector('.fa-chevron-down, .fa-chevron-up').classList.toggle('fa-chevron-down');">
+                    <i class="fas fa-check-double" style="color: var(--text-secondary);"></i> <span style="color: var(--text-secondary);">Finished Lectures</span> <i class="fas fa-chevron-down" style="margin-left: auto; font-size: 1rem; color: var(--text-secondary);"></i>
+                </h3>
+                <div class="upcoming-list" id="finished-list-container" style="display: none; padding-top: 1rem;">
+                    <!-- Finished lectures here -->
                 </div>
             </div>
         </div>
@@ -595,24 +606,119 @@
             
             const continueContainer = $('continue-container');
             const upcomingContainer = $('upcoming-list-container');
+            const finishedContainer = $('finished-list-container');
             continueContainer.innerHTML = '';
             upcomingContainer.innerHTML = '';
+            if (finishedContainer) finishedContainer.innerHTML = '';
+
+            const statsContainer = $('playlist-stats-container');
+            if (statsContainer) statsContainer.innerHTML = '';
 
             if (!generatedPlaylist || generatedPlaylist.length === 0) {
                 upcomingContainer.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle"></i><h2>All goals completed!</h2><p>Great job today.</p></div>';
                 return;
             }
 
+            let totalDuration = 0;
+            let totalWatched = 0;
+
+            // Calculate overall progress first
+            generatedPlaylist.forEach(lec => {
+                const durSecs = lec.duration && typeof lec.duration === 'number' ? lec.duration : 3600;
+                totalDuration += durSecs;
+                
+                const progId = `${lec.courseId}_${lec.lectureId}`;
+                const prog = courseProgress[progId];
+                if (prog) {
+                    if (prog.completed) {
+                        totalWatched += durSecs;
+                    } else if (prog.currentTime) {
+                        totalWatched += prog.currentTime;
+                    }
+                }
+            });
+
+            const timeLeftSecs = Math.max(0, totalDuration - totalWatched);
+            const timeLeftH = Math.floor(timeLeftSecs / 3600);
+            const timeLeftM = Math.floor((timeLeftSecs % 3600) / 60);
+            const timeLeftStr = `${timeLeftH}h ${timeLeftM}m`;
+
+            let completionPercentage = totalDuration > 0 ? Math.round((totalWatched / totalDuration) * 100) : 0;
+            if (completionPercentage > 100) completionPercentage = 100;
+
+            let percentageColor = 'var(--accent-danger)'; // Red
+            if (completionPercentage > 50) {
+                percentageColor = 'var(--accent-primary)'; // Green
+            } else if (completionPercentage >= 25) {
+                percentageColor = 'var(--status-review)'; // Yellow
+            }
+
+            if (statsContainer) {
+                statsContainer.innerHTML = `
+                    <div style="background: var(--bg-secondary); border: 1px solid var(--border-primary); border-radius: 12px; padding: 1rem 1.5rem; flex: 1; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                        <div style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem;">Time Left</div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary);"><i class="far fa-clock" style="color: var(--accent-primary); margin-right: 8px;"></i>${timeLeftStr}</div>
+                    </div>
+                    <div style="background: var(--bg-secondary); border: 1px solid var(--border-primary); border-radius: 12px; padding: 1rem 1.5rem; flex: 1; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                        <div style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem;">Playlist Progress</div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: ${percentageColor}; display: flex; align-items: center;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${percentageColor}; margin-right: 10px;"></div>
+                            ${completionPercentage}%
+                        </div>
+                    </div>
+                `;
+            }
+
             // Scheduling logic
             let currentTime = new Date();
-            
+            let firstUncompletedIdx = -1;
+
             generatedPlaylist.forEach((lec, idx) => {
-                // Calculate next time
-                const startTimeStr = formatTime(currentTime);
-                // Add duration (assuming duration is in seconds, fallback to 1 hour)
+                if (firstUncompletedIdx !== -1) return;
+                const progId = `${lec.courseId}_${lec.lectureId}`;
+                const prog = courseProgress[progId];
+                let isCompleted = false;
+                if (prog) {
+                    const durSecs = lec.duration && typeof lec.duration === 'number' ? lec.duration : 3600;
+                    if (prog.completed) isCompleted = true;
+                    else if (prog.currentTime >= durSecs && durSecs > 0) isCompleted = true;
+                }
+                if (!isCompleted) firstUncompletedIdx = idx;
+            });
+
+            if (firstUncompletedIdx === -1 && generatedPlaylist.length > 0) {
+                upcomingContainer.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle" style="color: var(--accent-primary);"></i><h2>All goals completed!</h2><p>Great job today.</p></div>';
+            }
+
+            generatedPlaylist.forEach((lec, idx) => {
                 const durSecs = lec.duration && typeof lec.duration === 'number' ? lec.duration : 3600;
-                currentTime = new Date(currentTime.getTime() + durSecs * 1000);
                 
+                // Calculate individual progress
+                const progId = `${lec.courseId}_${lec.lectureId}`;
+                const prog = courseProgress[progId];
+                let watchedTime = 0;
+                if (prog) {
+                    if (prog.completed) watchedTime = durSecs;
+                    else if (prog.currentTime) watchedTime = prog.currentTime;
+                }
+                let lecPercentage = durSecs > 0 ? Math.round((watchedTime / durSecs) * 100) : 0;
+                if (lecPercentage > 100) lecPercentage = 100;
+                
+                let isCompleted = lecPercentage === 100;
+
+                let lecPercentageColor = 'var(--text-secondary)';
+                if (lecPercentage > 0) {
+                    if (lecPercentage > 50) lecPercentageColor = 'var(--accent-primary)';
+                    else if (lecPercentage >= 25) lecPercentageColor = 'var(--status-review)';
+                    else lecPercentageColor = 'var(--accent-danger)';
+                }
+
+                let startTimeStr = "Completed";
+                if (!isCompleted) {
+                    startTimeStr = formatTime(currentTime);
+                    currentTime = new Date(currentTime.getTime() + (durSecs - watchedTime) * 1000);
+                }
+
                 // Format duration string
                 const h = Math.floor(durSecs / 3600);
                 const m = Math.floor((durSecs % 3600) / 60);
@@ -637,7 +743,7 @@
                     facultyNameToDisplay = lec.chName ? getSubfolderFacultyName(course, lec.chName) : (course.facultyName || 'Unknown Faculty');
                 }
 
-                if (idx === 0) {
+                if (idx === firstUncompletedIdx) {
                     // Continue Card
                     continueContainer.innerHTML = `
                         <div class="continue-card" draggable="true" data-index="${idx}" onclick="playLecture('${lec.courseId}', '${lec.lectureId}')">
@@ -650,10 +756,11 @@
                                 </div>
                             </div>
                             <div class="continue-info">
-                                <div class="continue-label">Up Next</div>
+                                <div class="continue-label">Continue Watching</div>
                                 <h3 class="continue-title" style="margin-bottom: 0.5rem;">${lec.title}</h3>
                                 <div style="display: flex; gap: 0.75rem; align-items: center; color: var(--text-secondary); font-size: 0.9rem; font-weight: 500;">
                                     <div style="border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: #fff; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem;"><i class="far fa-clock"></i> ${durStr}</div>
+                                    <div style="color: ${lecPercentageColor}; font-weight: 700; font-size: 0.85rem;">${lecPercentage}%</div>
                                     <span>•</span>
                                     <span>${lec.courseTitle}</span>
                                     <span>•</span>
@@ -673,46 +780,64 @@
                     cardEl.addEventListener('drop', handleDrop);
                     cardEl.addEventListener('dragend', handleDragEnd);
                 } else {
-                    // Upcoming list
+                    // Upcoming or Finished list
                     const item = document.createElement('div');
                     item.className = 'lecture-item';
-                    item.draggable = true;
                     item.dataset.index = idx;
+                    const opacityStyle = isCompleted ? 'opacity: 0.5;' : '';
+                    const strikeStyle = isCompleted ? 'text-decoration: line-through;' : '';
+                    if (isCompleted) {
+                        item.style.pointerEvents = 'none';
+                        item.style.borderColor = 'var(--border-secondary)';
+                    } else {
+                        item.draggable = true;
+                    }
+                    
                     item.innerHTML = `
-                        <div style="width: 130px; height: 100px; background-color: var(--bg-secondary); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                        <div style="width: 130px; height: 100px; background-color: var(--bg-secondary); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.3); ${opacityStyle}">
                             <div style="width: 100%; flex-grow: 1; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05); overflow: hidden;">
                                 ${thumbHtml}
                             </div>
-                            <div style="padding: 6px 10px; font-weight: 700; font-size: 0.8rem; color: #fff; height: 32px; display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            <div style="padding: 6px 10px; font-weight: 700; font-size: 0.8rem; color: #fff; height: 32px; display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; ${strikeStyle}">
                                 ${lec.courseTitle}
                             </div>
                         </div>
-                        <div class="lecture-time">${startTimeStr}</div>
-                        <div class="lecture-details">
-                            <h4 class="lecture-title" style="margin: 0 0 0.3rem 0; font-size: 1.05rem; font-weight: 600;">${lec.title}</h4>
-                            <div style="font-size: 0.8rem; color: var(--text-secondary); display: flex; gap: 0.5rem; align-items: center;">
+                        <div class="lecture-time" style="${isCompleted ? 'background: transparent; border: 1px solid var(--accent-primary); color: var(--accent-primary);' : ''}">${isCompleted ? '<i class="fas fa-check"></i>' : startTimeStr}</div>
+                        <div class="lecture-details" style="${opacityStyle}">
+                            <h4 class="lecture-title" style="margin: 0 0 0.3rem 0; font-size: 1.05rem; font-weight: 600; ${strikeStyle}">${lec.title}</h4>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary); display: flex; gap: 0.5rem; align-items: center; ${strikeStyle}">
                                 <span>${lec.courseTitle}</span>
                                 <span>•</span>
                                 <span>${facultyNameToDisplay}</span>
                             </div>
                         </div>
-                        <div style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 500; background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 12px;"><i class="far fa-clock"></i> ${durStr}</div>
-                        <i class="fas fa-grip-vertical drag-handle" title="Drag to reorder subjects" style="color: var(--text-tertiary); margin-left: 1rem; cursor: grab;"></i>
+                        <div style="display: flex; align-items: center; gap: 1rem; ${opacityStyle}">
+                            <div style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 500; background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 12px;"><i class="far fa-clock"></i> ${durStr}</div>
+                            ${isCompleted ? `<div style="font-size: 0.9rem; font-weight: 700; color: var(--accent-primary); width: 40px; text-align: right;"><i class="fas fa-check-circle"></i></div>` : (lecPercentage > 0 ? `<div style="font-size: 0.9rem; font-weight: 700; color: ${lecPercentageColor}; width: 40px; text-align: right;">${lecPercentage}%</div>` : '')}
+                        </div>
+                        ${isCompleted ? '' : '<i class="fas fa-grip-vertical drag-handle" title="Drag to reorder subjects" style="color: var(--text-tertiary); margin-left: 1rem; cursor: grab;"></i>'}
                     `;
                     item.onclick = (e) => {
                         // Prevent click if they are just dragging
                         if (e.target.closest('.drag-handle')) return;
-                        alert("Complete the previous lecture in order to gain access to this!");
+                        if (!isCompleted && idx > firstUncompletedIdx) {
+                            alert("Complete the previous lecture in order to gain access to this!");
+                        } else if (!isCompleted) {
+                            playLecture(lec.courseId, lec.lectureId);
+                        }
                     };
                     
-                    item.addEventListener('dragstart', handleDragStart);
-                    item.addEventListener('dragover', handleDragOver);
-                    item.addEventListener('dragenter', handleDragEnter);
-                    item.addEventListener('dragleave', handleDragLeave);
-                    item.addEventListener('drop', handleDrop);
-                    item.addEventListener('dragend', handleDragEnd);
-                    
-                    upcomingContainer.appendChild(item);
+                    if (!isCompleted) {
+                        item.addEventListener('dragstart', handleDragStart);
+                        item.addEventListener('dragover', handleDragOver);
+                        item.addEventListener('dragenter', handleDragEnter);
+                        item.addEventListener('dragleave', handleDragLeave);
+                        item.addEventListener('drop', handleDrop);
+                        item.addEventListener('dragend', handleDragEnd);
+                        upcomingContainer.appendChild(item);
+                    } else if (finishedContainer) {
+                        finishedContainer.appendChild(item);
+                    }
                 }
             });
         }
@@ -776,6 +901,7 @@
                 localStorage.removeItem('courseflix_goals_playlist');
                 generatedPlaylist = [];
                 document.querySelectorAll('.subject-card.selected').forEach(el => el.classList.remove('selected'));
+                renderSubjectsList();
                 showStep('step-1');
             }
         };
@@ -786,6 +912,9 @@
                 await initDB();
                 await loadData();
                 $('loading').style.display = 'none';
+                
+                // Always render subjects list so it's ready if they delete the playlist
+                renderSubjectsList();
                 
                 // On load, restore the playlist exactly as it is so the user can use the Eye icon to hide/unhide completed lectures
                 const saved = localStorage.getItem('courseflix_goals_playlist');
@@ -801,7 +930,6 @@
                 }
                 
                 $('app-container').style.display = 'flex';
-                renderSubjectsList();
                 showStep('step-1');
                 
             } catch (e) {
